@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-25 01:46",
+  "generatedAt": "2026-10-25 02:34",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "9885d64",
+    "shortHead": "72a5f40",
     "lastSubjects": [
-      "feat: complete Phase 7 (Tier 2 patterns, paste interception, optional local loopback Gemma assist)",
-      "feat: complete Phase 6 documentation and demo scripts",
-      "feat: complete Phase 5 dashboard and background service worker badge",
-      "feat: complete Phase 4 ChatGPT integration (adapter, composer, interceptor, main, tests)",
-      "feat: complete Phase 3 UI (shared CSS, popup, preview modal, dev harness, tests)"
+      "docs: add test report",
+      "chore: apply prettier formatting",
+      "test: add QA static, behaviour and e2e tests",
+      "fix: fail closed when redaction cannot be applied to the composer",
+      "feat: complete Phase 7 (Tier 2 patterns, paste interception, optional local loopback Gemma assist)"
     ],
-    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/state/state.json, docs/state/tasks.json, package-lock.json, package.json, src/content/interceptor.js, tests/failclosed.test.js, tests/e2e/, tests/qa-behaviour.test.js, tests/qa-e2e.test.js, tests/qa-static.test.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/state/state.json, docs/state/tasks.json, src/content/adapters/chatgpt.js, src/content/main.js, tests/content.test.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
         "total": 16,
-        "done": 1
+        "done": 3
       },
       "2": {
         "total": 6,
@@ -35,7 +35,7 @@
       },
       "M2": {
         "total": 7,
-        "done": 1
+        "done": 3
       },
       "M3": {
         "total": 5,
@@ -46,10 +46,40 @@
         "done": 0
       }
     },
-    "tierOnePercent": 6
+    "tierOnePercent": 19
   },
   "tasks": {
     "Done": [
+      {
+        "id": "T1-07",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Locate composer and read/write text including contenteditable",
+        "status": "done",
+        "deps": [],
+        "files": [
+          "src/content/adapters/chatgpt.js",
+          "src/content/composer.js"
+        ],
+        "updated": "2026-10-25 02:34",
+        "note": "Robust composer detection supporting ProseMirror and textarea fallbacks"
+      },
+      {
+        "id": "T1-08",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Intercept Enter and Send click before submission",
+        "status": "done",
+        "deps": [
+          "T1-07"
+        ],
+        "files": [
+          "src/content/interceptor.js",
+          "src/content/main.js"
+        ],
+        "updated": "2026-10-25 02:34",
+        "note": "Lazy send button lookup ignoring voice and think buttons"
+      },
       {
         "id": "T1-09",
         "tier": 1,
@@ -143,20 +173,6 @@
           "tests/validators.test.js",
           "tests/detector.test.js",
           "tests/redactor.test.js"
-        ],
-        "updated": "",
-        "note": ""
-      },
-      {
-        "id": "T1-07",
-        "tier": 1,
-        "owner": "M2",
-        "title": "Locate composer and read/write text including contenteditable",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "src/content/adapters/chatgpt.js",
-          "src/content/composer.js"
         ],
         "updated": "",
         "note": ""
@@ -458,22 +474,6 @@
         ],
         "updated": "",
         "note": ""
-      },
-      {
-        "id": "T1-08",
-        "tier": 1,
-        "owner": "M2",
-        "title": "Intercept Enter and Send click before submission",
-        "status": "todo",
-        "deps": [
-          "T1-07"
-        ],
-        "files": [
-          "src/content/interceptor.js",
-          "src/content/main.js"
-        ],
-        "updated": "",
-        "note": ""
       }
     ]
   },
@@ -514,28 +514,30 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M2-001",
+      "id": "M2-002",
       "member": 2,
-      "sequence": 1,
-      "timestamp": "2026-10-25 01:44",
+      "sequence": 2,
+      "timestamp": "2026-10-25 02:33",
       "branch": "feat/solo-build",
-      "heading": "## M2-001 | 2026-10-25 01:44 | feat/solo-build",
-      "line": 3,
+      "heading": "## M2-002 | 2026-10-25 02:33 | feat/solo-build",
+      "line": 18,
       "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
-      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
-      "prompt": "fix: fail closed when redaction cannot be applied to the composer",
+      "body": "**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n**Status:** done\n**Tasks:** T1-07, T1-08\n**Decisions:** none\n**Notes for others:** none\n**Next:** Test in live browser extension environment against latest ChatGPT DOM.",
+      "full": "## M2-002 | 2026-10-25 02:33 | feat/solo-build\n**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n**Status:** done\n**Tasks:** T1-07, T1-08\n**Decisions:** none\n**Notes for others:** none\n**Next:** Test in live browser extension environment against latest ChatGPT DOM.",
+      "prompt": "fix: detect ChatGPT composer robustly and look up Send button lazily",
       "changes": [
-        "Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.",
-        "Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.",
-        "Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes."
+        "Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.",
+        "Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.",
+        "Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.",
+        "Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.",
+        "Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion."
       ],
-      "files": "`src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)",
+      "files": "`src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)",
       "status": "done",
-      "tasks": "T1-09",
+      "tasks": "T1-07, T1-08",
       "decisions": "none",
       "notes": "none",
-      "next": "Run full verification and review regression suite."
+      "next": "Test in live browser extension environment against latest ChatGPT DOM."
     },
     {
       "id": "M4-004",
@@ -546,14 +548,10 @@
       "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
       "line": 45,
       "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
       "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
-      "changes": [
-        "Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.",
-        "Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.",
-        "Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI."
-      ],
+      "changes": [],
       "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
       "status": "done",
       "tasks": "none",
@@ -564,6 +562,32 @@
   ],
   "recentActivity": [
     {
+      "id": "M2-002",
+      "member": 2,
+      "sequence": 2,
+      "timestamp": "2026-10-25 02:33",
+      "branch": "feat/solo-build",
+      "heading": "## M2-002 | 2026-10-25 02:33 | feat/solo-build",
+      "line": 18,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n**Status:** done\n**Tasks:** T1-07, T1-08\n**Decisions:** none\n**Notes for others:** none\n**Next:** Test in live browser extension environment against latest ChatGPT DOM.",
+      "full": "## M2-002 | 2026-10-25 02:33 | feat/solo-build\n**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n**Status:** done\n**Tasks:** T1-07, T1-08\n**Decisions:** none\n**Notes for others:** none\n**Next:** Test in live browser extension environment against latest ChatGPT DOM.",
+      "prompt": "fix: detect ChatGPT composer robustly and look up Send button lazily",
+      "changes": [
+        "Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.",
+        "Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.",
+        "Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.",
+        "Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.",
+        "Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion."
+      ],
+      "files": "`src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)",
+      "status": "done",
+      "tasks": "T1-07, T1-08",
+      "decisions": "none",
+      "notes": "none",
+      "next": "Test in live browser extension environment against latest ChatGPT DOM."
+    },
+    {
       "id": "M2-001",
       "member": 2,
       "sequence": 1,
@@ -572,14 +596,10 @@
       "heading": "## M2-001 | 2026-10-25 01:44 | feat/solo-build",
       "line": 3,
       "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
-      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
+      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n  **Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-09\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Run full verification and review regression suite.",
+      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n  **Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-09\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Run full verification and review regression suite.",
       "prompt": "fix: fail closed when redaction cannot be applied to the composer",
-      "changes": [
-        "Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.",
-        "Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.",
-        "Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes."
-      ],
+      "changes": [],
       "files": "`src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)",
       "status": "done",
       "tasks": "T1-09",
@@ -596,14 +616,10 @@
       "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
       "line": 45,
       "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
       "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
-      "changes": [
-        "Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.",
-        "Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.",
-        "Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI."
-      ],
+      "changes": [],
       "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
       "status": "done",
       "tasks": "none",
@@ -768,6 +784,10 @@
       "classification": null
     },
     {
+      "path": "TEST_REPORT.md",
+      "classification": null
+    },
+    {
       "path": "assets/icons/.gitkeep",
       "classification": null
     },
@@ -889,39 +909,39 @@
     },
     {
       "path": "src/ai/gemma.js",
-      "classification": "implemented (218 lines)"
+      "classification": "implemented (227 lines)"
     },
     {
       "path": "src/background/service-worker.js",
-      "classification": "implemented (87 lines)"
+      "classification": "implemented (103 lines)"
     },
     {
       "path": "src/content/adapters/chatgpt.js",
-      "classification": "implemented (74 lines)"
+      "classification": "implemented (257 lines)"
     },
     {
       "path": "src/content/composer.js",
-      "classification": "implemented (104 lines)"
+      "classification": "implemented (111 lines)"
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (294 lines)"
+      "classification": "implemented (320 lines)"
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (104 lines)"
+      "classification": "implemented (203 lines)"
     },
     {
       "path": "src/core/detector.js",
-      "classification": "implemented (260 lines)"
+      "classification": "implemented (278 lines)"
     },
     {
       "path": "src/core/patterns.js",
-      "classification": "implemented (33 lines)"
+      "classification": "implemented (37 lines)"
     },
     {
       "path": "src/core/redactor.js",
-      "classification": "implemented (107 lines)"
+      "classification": "implemented (110 lines)"
     },
     {
       "path": "src/core/validators.js",
@@ -929,11 +949,11 @@
     },
     {
       "path": "src/dashboard/dashboard.css",
-      "classification": "implemented (235 lines)"
+      "classification": "implemented (243 lines)"
     },
     {
       "path": "src/dashboard/dashboard.html",
-      "classification": "implemented (116 lines)"
+      "classification": "implemented (154 lines)"
     },
     {
       "path": "src/dashboard/dashboard.js",
@@ -945,59 +965,59 @@
     },
     {
       "path": "src/shared/storage.js",
-      "classification": "implemented (230 lines)"
+      "classification": "implemented (244 lines)"
     },
     {
       "path": "src/shared/vault.js",
-      "classification": "implemented (44 lines)"
+      "classification": "implemented (47 lines)"
     },
     {
       "path": "src/ui/dev/preview-demo.html",
-      "classification": "implemented (119 lines)"
+      "classification": "implemented (163 lines)"
     },
     {
       "path": "src/ui/overlay/preview-modal.css",
-      "classification": "implemented (363 lines)"
+      "classification": "implemented (377 lines)"
     },
     {
       "path": "src/ui/overlay/preview-modal.js",
-      "classification": "implemented (245 lines)"
+      "classification": "implemented (250 lines)"
     },
     {
       "path": "src/ui/popup/popup.css",
-      "classification": "implemented (310 lines)"
+      "classification": "implemented (314 lines)"
     },
     {
       "path": "src/ui/popup/popup.html",
-      "classification": "implemented (85 lines)"
+      "classification": "implemented (108 lines)"
     },
     {
       "path": "src/ui/popup/popup.js",
-      "classification": "implemented (125 lines)"
+      "classification": "implemented (136 lines)"
     },
     {
       "path": "src/ui/shared.css",
-      "classification": "implemented (64 lines)"
+      "classification": "implemented (66 lines)"
     },
     {
       "path": "tests/content.test.js",
-      "classification": "implemented (43 lines)"
+      "classification": "implemented (392 lines)"
     },
     {
       "path": "tests/detector.test.js",
-      "classification": "implemented (94 lines)"
+      "classification": "implemented (103 lines)"
     },
     {
       "path": "tests/e2e/mock-page.html",
-      "classification": "implemented (116 lines)"
+      "classification": "implemented (118 lines)"
     },
     {
       "path": "tests/failclosed.test.js",
-      "classification": "implemented (292 lines)"
+      "classification": "implemented (336 lines)"
     },
     {
       "path": "tests/gemma.test.js",
-      "classification": "implemented (96 lines)"
+      "classification": "implemented (98 lines)"
     },
     {
       "path": "tests/modal.test.js",
@@ -1005,35 +1025,35 @@
     },
     {
       "path": "tests/qa-behaviour.test.js",
-      "classification": "implemented (702 lines)"
+      "classification": "implemented (882 lines)"
     },
     {
       "path": "tests/qa-e2e.test.js",
-      "classification": "implemented (224 lines)"
+      "classification": "implemented (370 lines)"
     },
     {
       "path": "tests/qa-static.test.js",
-      "classification": "implemented (396 lines)"
+      "classification": "implemented (456 lines)"
     },
     {
       "path": "tests/redactor.test.js",
-      "classification": "implemented (75 lines)"
+      "classification": "implemented (91 lines)"
     },
     {
       "path": "tests/storage.test.js",
-      "classification": "implemented (60 lines)"
+      "classification": "implemented (68 lines)"
     },
     {
       "path": "tests/tier2.test.js",
-      "classification": "implemented (60 lines)"
+      "classification": "implemented (61 lines)"
     },
     {
       "path": "tests/validators.test.js",
-      "classification": "implemented (77 lines)"
+      "classification": "implemented (81 lines)"
     },
     {
       "path": "tests/vault.test.js",
-      "classification": "implemented (25 lines)"
+      "classification": "implemented (27 lines)"
     }
   ],
   "verification": "not run"
