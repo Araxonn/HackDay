@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ "${SKIP_STATE:-0}" = "1" ]; then
+  exit 0
+fi
+
+if ! node scripts/build-changelog.js || ! node scripts/state.js; then
+  echo "SafeShield state generation failed; commit aborted." >&2
+  exit 1
+fi
+
+git add PROJECT_STATE.md CHANGELOG.md docs/state/state.json

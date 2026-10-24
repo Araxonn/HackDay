@@ -1,0 +1,3 @@
+docs/changelog/member-*.md merge=union
+docs/state/decisions.md merge=union
+docs/state/issues.md merge=union

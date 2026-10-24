@@ -1,0 +1,936 @@
+{
+  "generatedAt": "2026-10-24 21:11",
+  "git": {
+    "branch": "chore/project-state-handoff",
+    "shortHead": "890588a",
+    "lastSubjects": [
+      "chore: initial project scaffold",
+      "chore: initial project scaffold"
+    ],
+    "workingTree": ".cursor/rules/safeshield.mdc, .gitattributes, .githooks/pre-commit, .github/CODEOWNERS, .github/copilot-instructions.md, .github/pull_request_template.md, .github/workflows/state-check.yml, .prettierignore, AGENTS.md, CHANGELOG.md, CLAUDE.md, CONTRIBUTING.md, GEMINI.md, PROJECT_STATE.md, README.md, docs/changelog/README.md, docs/changelog/member-1.md, docs/changelog/member-2.md, docs/changelog/member-3.md, docs/changelog/member-4.md, docs/state/decisions.md, docs/state/issues.md, docs/state/project.md, docs/state/resume-prompt.md, docs/state/state.json, docs/state/tasks.json, package.json, scripts/build-changelog.js, scripts/decision.js, scripts/lib.js, scripts/new-log-entry.js, scripts/setup-hooks.js, scripts/state.js, scripts/task.js"
+  },
+  "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
+  "progress": {
+    "tiers": {
+      "1": {
+        "total": 16,
+        "done": 0
+      },
+      "2": {
+        "total": 6,
+        "done": 0
+      },
+      "3": {
+        "total": 7,
+        "done": 0
+      }
+    },
+    "owners": {
+      "M1": {
+        "total": 10,
+        "done": 0
+      },
+      "M2": {
+        "total": 7,
+        "done": 0
+      },
+      "M3": {
+        "total": 5,
+        "done": 0
+      },
+      "M4": {
+        "total": 7,
+        "done": 0
+      }
+    },
+    "tierOnePercent": 0
+  },
+  "tasks": {
+    "Done": [],
+    "In progress": [],
+    "In review": [],
+    "Blocked": [],
+    "Next up": [
+      {
+        "id": "T1-01",
+        "tier": 1,
+        "owner": "M1",
+        "title": "Phone detector (+91 and 10-digit starting 6-9)",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/patterns.js",
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "2026-10-24 21:10",
+        "note": ""
+      },
+      {
+        "id": "T1-02",
+        "tier": 1,
+        "owner": "M1",
+        "title": "Email detector",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/patterns.js",
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-03",
+        "tier": 1,
+        "owner": "M1",
+        "title": "Aadhaar detector with Verhoeff check (12 digits, spaced or not)",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/validators.js",
+          "src/core/detector.js",
+          "tests/validators.test.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-04",
+        "tier": 1,
+        "owner": "M1",
+        "title": "PAN detector (AAAAA9999A)",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/patterns.js",
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-06",
+        "tier": 1,
+        "owner": "M1",
+        "title": "Unit tests with fake Indian test dataset",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "tests/validators.test.js",
+          "tests/detector.test.js",
+          "tests/redactor.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-07",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Locate composer and read/write text including contenteditable",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/content/adapters/chatgpt.js",
+          "src/content/composer.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-10",
+        "tier": 1,
+        "owner": "M3",
+        "title": "Popup with protection toggle and status",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/ui/popup/popup.html",
+          "src/ui/popup/popup.css",
+          "src/ui/popup/popup.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-11",
+        "tier": 1,
+        "owner": "M3",
+        "title": "Detection preview modal (Shadow DOM) with Send redacted / Cancel",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/ui/overlay/preview-modal.js",
+          "src/ui/overlay/preview-modal.css"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-12",
+        "tier": 1,
+        "owner": "M3",
+        "title": "Shield branding, icons, and styling",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "assets/icons",
+          "src/ui/shared.css",
+          "src/ui/popup/popup.css"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-13",
+        "tier": 1,
+        "owner": "M4",
+        "title": "storage.js enabled flag and stats counters",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/shared/storage.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-14",
+        "tier": 1,
+        "owner": "M4",
+        "title": "vault.js placeholder map and restore wiring",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/shared/vault.js",
+          "src/core/redactor.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-15",
+        "tier": 1,
+        "owner": "M4",
+        "title": "Dashboard page with counts per type",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/dashboard/dashboard.html",
+          "src/dashboard/dashboard.css",
+          "src/dashboard/dashboard.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-16",
+        "tier": 1,
+        "owner": "M4",
+        "title": "README, demo script, and test prompts",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "README.md",
+          "docs/demo-script.md",
+          "docs/test-prompts.md"
+        ],
+        "updated": "",
+        "note": "Scaffold files exist but remain placeholders."
+      },
+      {
+        "id": "T2-01",
+        "tier": 2,
+        "owner": "M1",
+        "title": "More Indian IDs (IFSC, UPI, bank account keyword trigger, PIN code, DOB, Voter ID, Passport, Driving Licence, GSTIN, vehicle number)",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/patterns.js",
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T2-02",
+        "tier": 2,
+        "owner": "M1",
+        "title": "Devanagari digit normalization and Hindi/Hinglish keyword triggers",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/validators.js",
+          "src/core/detector.js",
+          "tests/validators.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T2-03",
+        "tier": 2,
+        "owner": "M1",
+        "title": "Keyword-triggered names and addresses",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T2-04",
+        "tier": 2,
+        "owner": "M2",
+        "title": "Paste interception with warning",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/content/interceptor.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T2-05",
+        "tier": 2,
+        "owner": "M4",
+        "title": "Extension icon badge with redaction count",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/background/service-worker.js",
+          "manifest.json"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T2-06",
+        "tier": 2,
+        "owner": "M3",
+        "title": "Per-item keep original in preview",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/ui/overlay/preview-modal.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-01",
+        "tier": 3,
+        "owner": "M1",
+        "title": "Gemma-assisted name/address detection (local Gemma, redacted-only input guard)",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/ai/gemma.js"
+        ],
+        "updated": "",
+        "note": "Optional after the build window; redacted text only."
+      },
+      {
+        "id": "T3-02",
+        "tier": 3,
+        "owner": "M2",
+        "title": "File/PDF upload scanning and local OCR",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/content"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-03",
+        "tier": 3,
+        "owner": "M2",
+        "title": "Restore placeholders in the AI reply locally",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/content"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-04",
+        "tier": 3,
+        "owner": "M3",
+        "title": "Live PII highlighting while typing",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/ui"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-05",
+        "tier": 3,
+        "owner": "M4",
+        "title": "Dashboard charts, daily history, and export",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/dashboard"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-06",
+        "tier": 3,
+        "owner": "M2",
+        "title": "Additional platform adapters",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "src/content/adapters"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T3-07",
+        "tier": 3,
+        "owner": "M4",
+        "title": "Firefox support",
+        "status": "todo",
+        "deps": [],
+        "files": [
+          "manifest.json",
+          "src/background"
+        ],
+        "updated": "",
+        "note": ""
+      }
+    ],
+    "Later": [
+      {
+        "id": "T1-05",
+        "tier": 1,
+        "owner": "M1",
+        "title": "redact() with consistent placeholders and restore()",
+        "status": "todo",
+        "deps": [
+          "T1-01",
+          "T1-02",
+          "T1-03",
+          "T1-04"
+        ],
+        "files": [
+          "src/core/redactor.js",
+          "tests/redactor.test.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-08",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Intercept Enter and Send click before submission",
+        "status": "todo",
+        "deps": [
+          "T1-07"
+        ],
+        "files": [
+          "src/content/interceptor.js",
+          "src/content/main.js"
+        ],
+        "updated": "",
+        "note": ""
+      },
+      {
+        "id": "T1-09",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Fail-closed behavior and honest Active/Off/Not-supported status",
+        "status": "todo",
+        "deps": [
+          "T1-08"
+        ],
+        "files": [
+          "src/content/interceptor.js",
+          "src/content/main.js"
+        ],
+        "updated": "",
+        "note": ""
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "D-001",
+      "timestamp": "2026-10-24 20:36",
+      "member": 4,
+      "title": "Follow the PII project description",
+      "body": "**Decision:** Build PII redaction for Indian documents and languages, following problem statement #3.\n**Why:** The slide’s “What to build” box about news claims and source verification appears to belong to a different problem statement.\n**Alternatives:** Build the news verification tool described by that box.\n**Impact:** Product scope, requirements, and task priorities follow the PII project.",
+      "full": "## D-001 | 2026-10-24 20:36 | M4 | Follow the PII project description\n**Decision:** Build PII redaction for Indian documents and languages, following problem statement #3.\n**Why:** The slide’s “What to build” box about news claims and source verification appears to belong to a different problem statement.\n**Alternatives:** Build the news verification tool described by that box.\n**Impact:** Product scope, requirements, and task priorities follow the PII project."
+    },
+    {
+      "id": "D-002",
+      "timestamp": "2026-10-24 20:36",
+      "member": 4,
+      "title": "Chrome MV3 with plain JavaScript",
+      "body": "**Decision:** Use Chrome Manifest V3, plain JavaScript, no bundler, and the `globalThis.SafeShield` namespace with a guarded CommonJS export for tests.\n**Why:** MV3 content scripts cannot use ES module imports without a bundler, and the product must run directly from source.\n**Alternatives:** Add a bundler or use module imports in content scripts.\n**Impact:** Keep source files compatible with direct script loading and Node tests.",
+      "full": "## D-002 | 2026-10-24 20:36 | M4 | Chrome MV3 with plain JavaScript\n**Decision:** Use Chrome Manifest V3, plain JavaScript, no bundler, and the `globalThis.SafeShield` namespace with a guarded CommonJS export for tests.\n**Why:** MV3 content scripts cannot use ES module imports without a bundler, and the product must run directly from source.\n**Alternatives:** Add a bundler or use module imports in content scripts.\n**Impact:** Keep source files compatible with direct script loading and Node tests."
+    },
+    {
+      "id": "D-003",
+      "timestamp": "2026-10-24 20:36",
+      "member": 4,
+      "title": "Local deterministic detection; optional Gemma later",
+      "body": "**Decision:** Use local regex and checksum detection for the core; consider Gemma only as optional Tier 3 with already-redacted input.\n**Why:** Core privacy must not depend on an external model service.\n**Alternatives:** Send prompts to a hosted model for detection.\n**Impact:** Core operation requires no model API; any optional AI path must enforce redacted-only input.",
+      "full": "## D-003 | 2026-10-24 20:36 | M4 | Local deterministic detection; optional Gemma later\n**Decision:** Use local regex and checksum detection for the core; consider Gemma only as optional Tier 3 with already-redacted input.\n**Why:** Core privacy must not depend on an external model service.\n**Alternatives:** Send prompts to a hosted model for detection.\n**Impact:** Core operation requires no model API; any optional AI path must enforce redacted-only input."
+    },
+    {
+      "id": "D-004",
+      "timestamp": "2026-10-24 20:36",
+      "member": 4,
+      "title": "Per-member logs and generated master files",
+      "body": "**Decision:** Keep append-only per-member logs and generate master changelog/state files.\n**Why:** Separate ownership reduces concurrent edit conflicts while preserving a single current handoff.\n**Alternatives:** Have all members edit one shared changelog and state file.\n**Impact:** Edit `docs/changelog/member-N.md`; never hand-edit generated master files.",
+      "full": "## D-004 | 2026-10-24 20:36 | M4 | Per-member logs and generated master files\n**Decision:** Keep append-only per-member logs and generate master changelog/state files.\n**Why:** Separate ownership reduces concurrent edit conflicts while preserving a single current handoff.\n**Alternatives:** Have all members edit one shared changelog and state file.\n**Impact:** Edit `docs/changelog/member-N.md`; never hand-edit generated master files."
+    }
+  ],
+  "issues": [],
+  "latestPerMember": [
+    {
+      "id": "M4-004",
+      "member": 4,
+      "sequence": 4,
+      "timestamp": "2026-10-24 21:10",
+      "branch": "chore/project-state-handoff",
+      "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
+      "line": 45,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
+      "changes": [
+        "Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.",
+        "Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.",
+        "Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI."
+      ],
+      "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.",
+      "next": "Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up."
+    }
+  ],
+  "recentActivity": [
+    {
+      "id": "M4-004",
+      "member": 4,
+      "sequence": 4,
+      "timestamp": "2026-10-24 21:10",
+      "branch": "chore/project-state-handoff",
+      "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
+      "line": 45,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
+      "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
+      "changes": [
+        "Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.",
+        "Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.",
+        "Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI."
+      ],
+      "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.",
+      "next": "Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up."
+    },
+    {
+      "id": "M4-003",
+      "member": 4,
+      "sequence": 3,
+      "timestamp": "2026-10-24 20:36",
+      "branch": "chore/project-state-handoff",
+      "heading": "## M4-003 | 2026-10-24 20:36 | chore/project-state-handoff",
+      "line": 31,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Add generated project memory, task/decision tracking, agent protocols, and CI checks.\n**What changed:**\n\n- Added editable project state sources, per-member logs, generation scripts, and generated handoff files.\n- Added agent instructions, a Git hook, CI checks, and command-line tracking tools.\n  **Files:** `docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-004\n  **Notes for others:** Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.\n  **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.",
+      "full": "## M4-003 | 2026-10-24 20:36 | chore/project-state-handoff\n**Prompt:** Add generated project memory, task/decision tracking, agent protocols, and CI checks.\n**What changed:**\n\n- Added editable project state sources, per-member logs, generation scripts, and generated handoff files.\n- Added agent instructions, a Git hook, CI checks, and command-line tracking tools.\n  **Files:** `docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-004\n  **Notes for others:** Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.\n  **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.",
+      "prompt": "Add generated project memory, task/decision tracking, agent protocols, and CI checks.",
+      "changes": [],
+      "files": "`docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "D-004",
+      "notes": "Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.",
+      "next": "Run the verification commands, inspect the generated state, and open a PR into `main`."
+    },
+    {
+      "id": "M4-002",
+      "member": 4,
+      "sequence": 2,
+      "timestamp": "2026-10-24 20:36",
+      "branch": "chore/scaffold-setup",
+      "heading": "## M4-002 | 2026-10-24 20:36 | chore/scaffold-setup",
+      "line": 17,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Install minimal development tooling and configure formatting and linting.\n**What changed:**\n\n- Added the requested development-only formatter, linter, globals, and Chrome type packages.\n- Added npm test, lint, format, and format-check scripts and a flat ESLint config.\n  **Files:** `package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-002\n  **Notes for others:** `node_modules/` is ignored; the app has no runtime dependencies and no bundler.\n  **Next:** Add implementation and tests without weakening the local-only privacy requirements.",
+      "full": "## M4-002 | 2026-10-24 20:36 | chore/scaffold-setup\n**Prompt:** Install minimal development tooling and configure formatting and linting.\n**What changed:**\n\n- Added the requested development-only formatter, linter, globals, and Chrome type packages.\n- Added npm test, lint, format, and format-check scripts and a flat ESLint config.\n  **Files:** `package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-002\n  **Notes for others:** `node_modules/` is ignored; the app has no runtime dependencies and no bundler.\n  **Next:** Add implementation and tests without weakening the local-only privacy requirements.",
+      "prompt": "Install minimal development tooling and configure formatting and linting.",
+      "changes": [],
+      "files": "`package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "D-002",
+      "notes": "`node_modules/` is ignored; the app has no runtime dependencies and no bundler.",
+      "next": "Add implementation and tests without weakening the local-only privacy requirements."
+    },
+    {
+      "id": "M4-001",
+      "member": 4,
+      "sequence": 1,
+      "timestamp": "2026-10-24 20:36",
+      "branch": "chore/scaffold-setup",
+      "heading": "## M4-001 | 2026-10-24 20:36 | chore/scaffold-setup",
+      "line": 3,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Create the initial SafeShield repository scaffold.\n**What changed:**\n\n- Added the MV3 manifest, documentation placeholders, source tree, UI shells, and test placeholders.\n- Added placeholder extension icons at 16, 48, and 128 pixels.\n  **Files:** `manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The scaffold files were placeholders; existence alone does not mean the feature task is implemented.\n  **Next:** Build out the Tier 1 tasks owned by each member.",
+      "full": "## M4-001 | 2026-10-24 20:36 | chore/scaffold-setup\n**Prompt:** Create the initial SafeShield repository scaffold.\n**What changed:**\n\n- Added the MV3 manifest, documentation placeholders, source tree, UI shells, and test placeholders.\n- Added placeholder extension icons at 16, 48, and 128 pixels.\n  **Files:** `manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The scaffold files were placeholders; existence alone does not mean the feature task is implemented.\n  **Next:** Build out the Tier 1 tasks owned by each member.",
+      "prompt": "Create the initial SafeShield repository scaffold.",
+      "changes": [],
+      "files": "`manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "The scaffold files were placeholders; existence alone does not mean the feature task is implemented.",
+      "next": "Build out the Tier 1 tasks owned by each member."
+    }
+  ],
+  "openHandoffs": [
+    {
+      "id": "M4-004",
+      "member": 4,
+      "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames."
+    },
+    {
+      "id": "M4-003",
+      "member": 4,
+      "notes": "Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state."
+    },
+    {
+      "id": "M4-002",
+      "member": 4,
+      "notes": "`node_modules/` is ignored; the app has no runtime dependencies and no bundler."
+    },
+    {
+      "id": "M4-001",
+      "member": 4,
+      "notes": "The scaffold files were placeholders; existence alone does not mean the feature task is implemented."
+    }
+  ],
+  "repoMap": [
+    {
+      "path": ".cursor/rules/safeshield.mdc",
+      "classification": null
+    },
+    {
+      "path": ".env.example",
+      "classification": null
+    },
+    {
+      "path": ".gitattributes",
+      "classification": null
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "classification": null
+    },
+    {
+      "path": ".github/CODEOWNERS",
+      "classification": null
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "classification": null
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "classification": null
+    },
+    {
+      "path": ".github/workflows/state-check.yml",
+      "classification": null
+    },
+    {
+      "path": ".gitignore",
+      "classification": null
+    },
+    {
+      "path": ".prettierignore",
+      "classification": null
+    },
+    {
+      "path": ".prettierrc",
+      "classification": null
+    },
+    {
+      "path": "AGENTS.md",
+      "classification": null
+    },
+    {
+      "path": "CHANGELOG.md",
+      "classification": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "classification": null
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "classification": null
+    },
+    {
+      "path": "GEMINI.md",
+      "classification": null
+    },
+    {
+      "path": "PROJECT_STATE.md",
+      "classification": null
+    },
+    {
+      "path": "README.md",
+      "classification": null
+    },
+    {
+      "path": "assets/icons/.gitkeep",
+      "classification": null
+    },
+    {
+      "path": "assets/icons/icon128.png",
+      "classification": null
+    },
+    {
+      "path": "assets/icons/icon16.png",
+      "classification": null
+    },
+    {
+      "path": "assets/icons/icon48.png",
+      "classification": null
+    },
+    {
+      "path": "docs/changelog/README.md",
+      "classification": null
+    },
+    {
+      "path": "docs/changelog/member-1.md",
+      "classification": null
+    },
+    {
+      "path": "docs/changelog/member-2.md",
+      "classification": null
+    },
+    {
+      "path": "docs/changelog/member-3.md",
+      "classification": null
+    },
+    {
+      "path": "docs/changelog/member-4.md",
+      "classification": null
+    },
+    {
+      "path": "docs/contracts.md",
+      "classification": null
+    },
+    {
+      "path": "docs/demo-script.md",
+      "classification": null
+    },
+    {
+      "path": "docs/state/decisions.md",
+      "classification": null
+    },
+    {
+      "path": "docs/state/issues.md",
+      "classification": null
+    },
+    {
+      "path": "docs/state/project.md",
+      "classification": null
+    },
+    {
+      "path": "docs/state/resume-prompt.md",
+      "classification": null
+    },
+    {
+      "path": "docs/state/state.json",
+      "classification": null
+    },
+    {
+      "path": "docs/state/tasks.json",
+      "classification": null
+    },
+    {
+      "path": "docs/test-prompts.md",
+      "classification": null
+    },
+    {
+      "path": "eslint.config.js",
+      "classification": null
+    },
+    {
+      "path": "manifest.json",
+      "classification": null
+    },
+    {
+      "path": "package-lock.json",
+      "classification": null
+    },
+    {
+      "path": "package.json",
+      "classification": null
+    },
+    {
+      "path": "scripts/build-changelog.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/decision.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/lib.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/new-log-entry.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/setup-hooks.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/state.js",
+      "classification": null
+    },
+    {
+      "path": "scripts/task.js",
+      "classification": null
+    },
+    {
+      "path": "src/ai/gemma.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/background/service-worker.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/content/adapters/chatgpt.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/content/composer.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/content/interceptor.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/content/main.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/core/detector.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/core/patterns.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/core/redactor.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/core/validators.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/dashboard/dashboard.css",
+      "classification": "stub"
+    },
+    {
+      "path": "src/dashboard/dashboard.html",
+      "classification": "stub"
+    },
+    {
+      "path": "src/dashboard/dashboard.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/shared/constants.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/shared/storage.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/shared/vault.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/overlay/preview-modal.css",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/overlay/preview-modal.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/popup/popup.css",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/popup/popup.html",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/popup/popup.js",
+      "classification": "stub"
+    },
+    {
+      "path": "src/ui/shared.css",
+      "classification": "stub"
+    },
+    {
+      "path": "tests/detector.test.js",
+      "classification": "stub"
+    },
+    {
+      "path": "tests/redactor.test.js",
+      "classification": "stub"
+    },
+    {
+      "path": "tests/validators.test.js",
+      "classification": "stub"
+    }
+  ],
+  "verification": "not run"
+}

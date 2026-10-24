@@ -1,1 +1,9 @@
 # Purpose: Repository code ownership map; owner: Member 4.
+/scripts/ @member4
+/PROJECT_STATE.md @member4
+/CHANGELOG.md @member4
+/docs/state/ @member4
+/docs/changelog/member-1.md @member1
+/docs/changelog/member-2.md @member2
+/docs/changelog/member-3.md @member3
+/docs/changelog/member-4.md @member4
