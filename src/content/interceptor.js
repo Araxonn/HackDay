@@ -150,9 +150,13 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     try {
       // Write redacted text into the composer
-      const setTextOk = composer.setText(composerEl, redactedText);
-      if (!setTextOk) {
-        console.warn('SafeShield: setText returned false, falling back to safe modal review');
+      const setTextOk = composer ? composer.setText(composerEl, redactedText) : false;
+      const currentText = composer ? composer.getText(composerEl) : '';
+      if (!setTextOk || currentText !== redactedText) {
+        if (modal && typeof modal.warn === 'function') {
+          modal.warn('Send blocked: could not apply redaction');
+        }
+        return;
       }
 
       // Show preview modal in Shadow DOM
@@ -171,6 +175,32 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       const action = modalResult ? modalResult.action : 'cancel';
 
       if (action === 'send') {
+        // Final safety check immediately before ANY call to composer.submit:
+        // re-read the composer text, run detect() on it, and if any PII is still found (or detect throws),
+        // block the send and call modal.warn.
+        let finalText = '';
+        let detected = [];
+        try {
+          finalText = composer ? composer.getText(composerEl) : '';
+          const detector = SafeShield.detector;
+          if (!detector || typeof detector.detect !== 'function') {
+            throw new Error('SafeShield detector is not loaded');
+          }
+          detected = detector.detect(finalText);
+        } catch {
+          if (modal && typeof modal.warn === 'function') {
+            modal.warn('Send blocked: could not verify composer text safety');
+          }
+          return;
+        }
+
+        if (detected && detected.length > 0) {
+          if (modal && typeof modal.warn === 'function') {
+            modal.warn('Send blocked: sensitive data detected in composer');
+          }
+          return;
+        }
+
         // Save entities to ephemeral memory vault and persist anonymized counts
         if (vault) vault.remember(entities);
         if (storage) await storage.addCounts(counts);
@@ -178,8 +208,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         // Submit redacted prompt
         isBypassing = true;
         try {
-          const submitted = composer.submit(adapter);
-          if (!submitted) {
+          let submitted = false;
+          if (composer && typeof composer.submit === 'function') {
+            submitted = composer.submit(adapter);
+          }
+          if (!submitted && typeof KeyboardEvent !== 'undefined') {
             // Fallback dispatching Enter key on composer
             const enterEvt = new KeyboardEvent('keydown', {
               key: 'Enter',
@@ -198,15 +231,21 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         }
       } else if (action === 'restore') {
         // User requested local edit: restore original text into composer
-        composer.setText(composerEl, originalPrompt);
+        if (composer && typeof composer.setText === 'function') {
+          composer.setText(composerEl, originalPrompt);
+        }
       } else {
         // Canceled: restore original text so user does not lose draft
-        composer.setText(composerEl, originalPrompt);
+        if (composer && typeof composer.setText === 'function') {
+          composer.setText(composerEl, originalPrompt);
+        }
       }
     } catch (err) {
       // FAIL CLOSED
       console.error('SafeShield error during review/send:', err);
-      if (modal) modal.warn('Send blocked: an unexpected error occurred.');
+      if (modal && typeof modal.warn === 'function') {
+        modal.warn('Send blocked: an unexpected error occurred.');
+      }
     }
   }
 

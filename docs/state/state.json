@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-25 00:31",
+  "generatedAt": "2026-10-25 01:46",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "32165d2",
+    "shortHead": "9885d64",
     "lastSubjects": [
+      "feat: complete Phase 7 (Tier 2 patterns, paste interception, optional local loopback Gemma assist)",
       "feat: complete Phase 6 documentation and demo scripts",
       "feat: complete Phase 5 dashboard and background service worker badge",
       "feat: complete Phase 4 ChatGPT integration (adapter, composer, interceptor, main, tests)",
-      "feat: complete Phase 3 UI (shared CSS, popup, preview modal, dev harness, tests)",
-      "feat: complete Phase 2 detection engine (validators, patterns, detector, redactor, tests)"
+      "feat: complete Phase 3 UI (shared CSS, popup, preview modal, dev harness, tests)"
     ],
-    "workingTree": "README.md, eslint.config.js, manifest.json, src/ai/gemma.js, src/background/service-worker.js, src/content/interceptor.js, src/content/main.js, src/core/detector.js, src/core/patterns.js, src/ui/overlay/preview-modal.js, src/ui/popup/popup.css, src/ui/popup/popup.html, src/ui/popup/popup.js, tests/gemma.test.js, tests/tier2.test.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/state/state.json, docs/state/tasks.json, package-lock.json, package.json, src/content/interceptor.js, tests/failclosed.test.js, tests/e2e/, tests/qa-behaviour.test.js, tests/qa-e2e.test.js, tests/qa-static.test.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
         "total": 16,
-        "done": 0
+        "done": 1
       },
       "2": {
         "total": 6,
@@ -35,7 +35,7 @@
       },
       "M2": {
         "total": 7,
-        "done": 0
+        "done": 1
       },
       "M3": {
         "total": 5,
@@ -46,10 +46,27 @@
         "done": 0
       }
     },
-    "tierOnePercent": 0
+    "tierOnePercent": 6
   },
   "tasks": {
-    "Done": [],
+    "Done": [
+      {
+        "id": "T1-09",
+        "tier": 1,
+        "owner": "M2",
+        "title": "Fail-closed behavior and honest Active/Off/Not-supported status",
+        "status": "done",
+        "deps": [
+          "T1-08"
+        ],
+        "files": [
+          "src/content/interceptor.js",
+          "src/content/main.js"
+        ],
+        "updated": "2026-10-25 01:44",
+        "note": "Fail-closed behavior enforced when redaction cannot be applied"
+      }
+    ],
     "In progress": [],
     "In review": [],
     "Blocked": [],
@@ -457,22 +474,6 @@
         ],
         "updated": "",
         "note": ""
-      },
-      {
-        "id": "T1-09",
-        "tier": 1,
-        "owner": "M2",
-        "title": "Fail-closed behavior and honest Active/Off/Not-supported status",
-        "status": "todo",
-        "deps": [
-          "T1-08"
-        ],
-        "files": [
-          "src/content/interceptor.js",
-          "src/content/main.js"
-        ],
-        "updated": "",
-        "note": ""
       }
     ]
   },
@@ -513,6 +514,30 @@
   "issues": [],
   "latestPerMember": [
     {
+      "id": "M2-001",
+      "member": 2,
+      "sequence": 1,
+      "timestamp": "2026-10-25 01:44",
+      "branch": "feat/solo-build",
+      "heading": "## M2-001 | 2026-10-25 01:44 | feat/solo-build",
+      "line": 3,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
+      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
+      "prompt": "fix: fail closed when redaction cannot be applied to the composer",
+      "changes": [
+        "Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.",
+        "Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.",
+        "Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes."
+      ],
+      "files": "`src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)",
+      "status": "done",
+      "tasks": "T1-09",
+      "decisions": "none",
+      "notes": "none",
+      "next": "Run full verification and review regression suite."
+    },
+    {
       "id": "M4-004",
       "member": 4,
       "sequence": 4,
@@ -538,6 +563,30 @@
     }
   ],
   "recentActivity": [
+    {
+      "id": "M2-001",
+      "member": 2,
+      "sequence": 1,
+      "timestamp": "2026-10-25 01:44",
+      "branch": "feat/solo-build",
+      "heading": "## M2-001 | 2026-10-25 01:44 | feat/solo-build",
+      "line": 3,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
+      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n**Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n**Status:** done\n**Tasks:** T1-09\n**Decisions:** none\n**Notes for others:** none\n**Next:** Run full verification and review regression suite.",
+      "prompt": "fix: fail closed when redaction cannot be applied to the composer",
+      "changes": [
+        "Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.",
+        "Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.",
+        "Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes."
+      ],
+      "files": "`src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)",
+      "status": "done",
+      "tasks": "T1-09",
+      "decisions": "none",
+      "notes": "none",
+      "next": "Run full verification and review regression suite."
+    },
     {
       "id": "M4-004",
       "member": 4,
@@ -856,7 +905,7 @@
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (258 lines)"
+      "classification": "implemented (294 lines)"
     },
     {
       "path": "src/content/main.js",
@@ -939,12 +988,32 @@
       "classification": "implemented (94 lines)"
     },
     {
+      "path": "tests/e2e/mock-page.html",
+      "classification": "implemented (116 lines)"
+    },
+    {
+      "path": "tests/failclosed.test.js",
+      "classification": "implemented (292 lines)"
+    },
+    {
       "path": "tests/gemma.test.js",
       "classification": "implemented (96 lines)"
     },
     {
       "path": "tests/modal.test.js",
       "classification": "implemented (25 lines)"
+    },
+    {
+      "path": "tests/qa-behaviour.test.js",
+      "classification": "implemented (702 lines)"
+    },
+    {
+      "path": "tests/qa-e2e.test.js",
+      "classification": "implemented (224 lines)"
+    },
+    {
+      "path": "tests/qa-static.test.js",
+      "classification": "implemented (396 lines)"
     },
     {
       "path": "tests/redactor.test.js",
