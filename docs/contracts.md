@@ -1,0 +1,1 @@
+<!-- Purpose: Document component contracts; owner: Member 4. -->

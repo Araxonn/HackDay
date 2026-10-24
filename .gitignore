@@ -1,0 +1,7 @@
+# Purpose: Exclude generated, local, and secret files; owner: Member 4.
+node_modules/
+.DS_Store
+.vscode/
+dist/
+*.log
+.env
