@@ -12,8 +12,13 @@ module.exports = [
       globals: {
         ...globals.browser,
         ...globals.node,
+        SafeShield: 'writable',
+        chrome: 'readonly',
       },
     },
-    rules: js.configs.recommended.rules,
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-control-regex': 'off',
+    },
   },
 ];
