@@ -43,14 +43,28 @@
   **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.
 
 ## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff
+
 **Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.
 **What changed:**
+
 - Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.
 - Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.
 - Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.
-**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)
+  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)
+  **Status:** done
+  **Tasks:** none
+  **Decisions:** none
+  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.
+  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.
+
+## M4-005 | 2026-10-25 03:43 | feat/solo-build
+**Prompt:** docs: add MIT license and complete open-source README
+**What changed:**
+- Added `LICENSE` file (MIT) with copyright line "Copyright (c) 2026 SafeShield Contributors".
+- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.
+**Files:** `LICENSE` (added), `README.md` (modified)
 **Status:** done
-**Tasks:** none
+**Tasks:** T1-16
 **Decisions:** none
-**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.
-**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.
+**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.
+**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.
