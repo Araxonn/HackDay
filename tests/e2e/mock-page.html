@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mock ChatGPT Composer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 40px;
+      max-width: 700px;
+      margin: 0 auto;
+      background: #f7f7f8;
+    }
+    .composer-container {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    #prompt-textarea {
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #prompt-textarea:focus {
+      border-color: #10a37f;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    button[data-testid="send-button"] {
+      background: #10a37f;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button[data-testid="send-button"]:disabled {
+      background: #e5e7eb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .received-box {
+      margin-top: 24px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    pre {
+      background: #f3f4f6;
+      padding: 10px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mock ChatGPT Local Test Harness</h2>
+  <div class="composer-container">
+    <div
+      id="prompt-textarea"
+      class="ProseMirror"
+      contenteditable="true"
+      tabindex="0"
+      role="textbox"
+      aria-label="Send a message"
+    ></div>
+    <div class="actions">
+      <button type="button" data-testid="send-button" id="send-button">Send</button>
+    </div>
+  </div>
+
+  <div class="received-box">
+    <h3>Submissions Received by Mock Host:</h3>
+    <div id="received-count">Total: 0</div>
+    <pre id="received-log">(None yet)</pre>
+  </div>
+
+  <script>
+    window.receivedSubmissions = [];
+
+    const composer = document.getElementById('prompt-textarea');
+    const sendBtn = document.getElementById('send-button');
+    const countEl = document.getElementById('received-count');
+    const logEl = document.getElementById('received-log');
+
+    function doSubmit() {
+      const text = composer.innerText || composer.textContent || '';
+      window.receivedSubmissions.push(text);
+      countEl.textContent = 'Total: ' + window.receivedSubmissions.length;
+      logEl.textContent = JSON.stringify(window.receivedSubmissions, null, 2);
+    }
+
+    sendBtn.addEventListener('click', () => {
+      doSubmit();
+    });
+
+    composer.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        // Chatbot standard Enter triggers send
+        doSubmit();
+      }
+    });
+  </script>
+</body>
+</html>
