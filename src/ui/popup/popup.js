@@ -55,18 +55,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const activeTab = tabs[0];
-        if (!activeTab.id || !activeTab.url) {
+        if (!activeTab || !activeTab.id) {
           setStatusUI('unsupported', 'Not supported on this page');
           return;
         }
 
-        // Send status request to content script
+        // Send status request to content script (decide support only from response)
         chrome.tabs.sendMessage(
           activeTab.id,
           { type: 'SS_GET_STATUS' },
           (response) => {
             if (chrome.runtime.lastError || !response) {
-              // Content script not loaded or page unsupported
+              // Content script not loaded or page unsupported (e.g. "Receiving end does not exist")
               setStatusUI('unsupported', 'Not supported on this page');
               return;
             }
