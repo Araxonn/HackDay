@@ -117,6 +117,104 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       }
     }
 
+    // Tier 2: GSTIN (Priority 9)
+    if (patterns.GSTIN) {
+      const regex = new RegExp(patterns.GSTIN.source, patterns.GSTIN.flags);
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        candidates.push({
+          type: PII_TYPES.GSTIN || 'GSTIN',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 9,
+        });
+      }
+    }
+
+    // Tier 2: IFSC (Priority 7)
+    if (patterns.IFSC) {
+      const regex = new RegExp(patterns.IFSC.source, patterns.IFSC.flags);
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        candidates.push({
+          type: PII_TYPES.IFSC || 'IFSC',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 7,
+        });
+      }
+    }
+
+    // Tier 2: UPI (Priority 6)
+    if (patterns.UPI) {
+      const regex = new RegExp(patterns.UPI.source, patterns.UPI.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        candidates.push({
+          type: PII_TYPES.UPI || 'UPI',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 6,
+        });
+      }
+    }
+
+    // Tier 2: Voter ID (Priority 5)
+    if (patterns.VOTER_ID) {
+      const regex = new RegExp(patterns.VOTER_ID.source, patterns.VOTER_ID.flags);
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        candidates.push({
+          type: PII_TYPES.VOTER_ID || 'VOTER_ID',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 5,
+        });
+      }
+    }
+
+    // Tier 2: Passport (Priority 5)
+    if (patterns.PASSPORT) {
+      const regex = new RegExp(patterns.PASSPORT.source, patterns.PASSPORT.flags);
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        candidates.push({
+          type: PII_TYPES.PASSPORT || 'PASSPORT',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 5,
+        });
+      }
+    }
+
+    // Tier 2: PIN code (Priority 4)
+    if (patterns.PINCODE) {
+      const regex = new RegExp(patterns.PINCODE.source, patterns.PINCODE.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        candidates.push({
+          type: PII_TYPES.PINCODE || 'PINCODE',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 4,
+        });
+      }
+    }
+
+    // Tier 2: DOB (Priority 4)
+    if (patterns.DOB) {
+      const regex = new RegExp(patterns.DOB.source, patterns.DOB.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        candidates.push({
+          type: PII_TYPES.DOB || 'DOB',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 4,
+        });
+      }
+    }
+
     if (candidates.length === 0) {
       return [];
     }

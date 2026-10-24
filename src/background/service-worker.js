@@ -1,5 +1,11 @@
 // SafeShield Background Service Worker (Manifest V3)
-// Maintains the extension action badge count reflecting total protected items
+// Maintains the extension action badge count and provides a loopback proxy for local Ollama
+
+try {
+  importScripts('../shared/constants.js', '../shared/storage.js', '../ai/gemma.js');
+} catch (e) {
+  console.error('Service worker importScripts error:', e);
+}
 
 function updateBadge(stats) {
   if (typeof chrome === 'undefined' || !chrome.action || !chrome.action.setBadgeText) {
@@ -43,5 +49,48 @@ if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged)
     if (area === 'local' && changes.stats) {
       updateBadge(changes.stats.newValue);
     }
+  });
+}
+
+// SS_AI_CLASSIFY message bridge for local loopback Ollama
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (!message || message.type !== 'SS_AI_CLASSIFY') {
+      return false;
+    }
+
+    // Verify sender is strictly our own extension
+    if (!sender || sender.id !== chrome.runtime.id) {
+      sendResponse({ ok: false, error: 'forbidden' });
+      return false;
+    }
+
+    // Never log message text
+    const storage = SafeShield.storage;
+    const gemma = SafeShield.gemma;
+
+    if (!storage || !gemma) {
+      sendResponse({ ok: false, error: 'unavailable' });
+      return false;
+    }
+
+    // Re-verify that user has explicitly enabled AI Assist
+    storage.getAiAssist().then((enabled) => {
+      if (!enabled) {
+        sendResponse({ ok: false, error: 'disabled' });
+        return;
+      }
+
+      gemma
+        .classify(message.text, message.options)
+        .then((result) => {
+          sendResponse(result);
+        })
+        .catch(() => {
+          sendResponse({ ok: false, error: 'unavailable' });
+        });
+    });
+
+    return true; // Keep message channel open for async response
   });
 }

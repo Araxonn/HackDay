@@ -79,7 +79,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   }
 
   function show(params) {
-    const { redactedText, entities, counts } = params || {};
+    const { redactedText, entities, counts, note } = params || {};
     return new Promise((resolve) => {
       const root = getShadowRoot();
       const previousActiveEl = document.activeElement;
@@ -91,6 +91,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       backdrop.setAttribute('aria-labelledby', 'ss-modal-title');
 
       const totalItems = Object.values(counts || {}).reduce((a, b) => a + b, 0);
+      const noteBanner = note ? `<div class="ss-banner" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.3); margin-bottom: 8px;">ℹ️ ${note}</div>` : '';
 
       const entityRows = (entities || [])
         .map(
@@ -118,6 +119,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
             <button type="button" class="ss-close-btn" id="ss-close-x" aria-label="Cancel and close">&times;</button>
           </div>
           <div class="ss-body">
+            ${noteBanner}
             <div class="ss-banner">
               🛡️ ${totalItems} sensitive item${totalItems === 1 ? '' : 's'} detected and redacted locally before sending.
             </div>

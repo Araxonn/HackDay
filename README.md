@@ -32,12 +32,38 @@ SafeShield is designed from first principles with a **fail-closed, local-first**
 - Email addresses.
 - 12-digit Indian Aadhaar numbers passing the Verhoeff checksum algorithm.
 - 10-character Indian PAN cards matching official status codes (`[ABCFGHLJPT]`).
+- Tier 2 Indian financial & identification identifiers: IFSC codes, UPI IDs, PIN codes (near keywords), Dates of Birth, Voter IDs, Passport numbers, and GSTINs.
 - Numerals in both ASCII and Devanagari Hindi script (`०-९`).
+- Proactive warning banner on paste of sensitive data.
+- (Optional Tier 3) Local Gemma Assist for unstructured human names and physical addresses.
 
 ### What SafeShield Does NOT Protect (Limitations)
 - **Pattern-based detection**: Detection is heuristic and regular-expression based. Malformed numbers, unusual separators, or unstructured descriptions of personal data may be missed.
-- **Unstructured names & addresses**: General human names and street addresses require NLP or local AI assist and are not guaranteed by pure pattern matching.
+- **Hosted Cloud AI is intentionally blocked**: SafeShield NEVER talks to external hosted LLMs (no OpenAI, no Google Gemini API, no hosted Gemma API). Only local loopback Ollama is supported.
 - **Platform scope**: The prototype currently targets ChatGPT web interfaces. Other AI platforms (Claude, Gemini, Copilot) are not intercepted by default.
+
+---
+
+## Optional: Local Gemma AI Assist (Names & Addresses)
+
+SafeShield includes an **optional, disabled-by-default** local AI feature for detecting unstructured personal names and physical street addresses using a local Ollama instance running Gemma.
+
+> **Privacy Rule**: The local AI assist talks ONLY to your local loopback (`http://localhost:11434` or `http://127.0.0.1:11434`). Hosted cloud APIs are deliberately not supported. Structured PII is always regex-redacted *before* passing through local Gemma. If the model is offline or uninstalled, SafeShield falls back gracefully to regex pattern detection without blocking prompt submission.
+
+### Setup Steps for Local Ollama:
+1. Install [Ollama](https://ollama.com).
+2. Pull the lightweight Gemma model:
+   ```bash
+   ollama pull gemma4:e2b
+   ```
+   *(Note: Check your exact installed model tag with `ollama list` and adjust in code if you use a different tag).*
+3. On Windows, allow Chrome extension access to loopback Ollama:
+   ```powershell
+   setx OLLAMA_ORIGINS "chrome-extension://*"
+   ```
+4. Restart the Ollama service:
+   Close Ollama from the Windows taskbar system tray and restart it from the Start menu.
+5. In SafeShield's popup, toggle on **Local AI Assist (Names & Addresses)**.
 
 ---
 

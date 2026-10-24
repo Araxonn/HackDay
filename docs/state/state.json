@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-10-25 00:23",
+  "generatedAt": "2026-10-25 00:31",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "0bb54cd",
+    "shortHead": "32165d2",
     "lastSubjects": [
+      "feat: complete Phase 6 documentation and demo scripts",
       "feat: complete Phase 5 dashboard and background service worker badge",
       "feat: complete Phase 4 ChatGPT integration (adapter, composer, interceptor, main, tests)",
       "feat: complete Phase 3 UI (shared CSS, popup, preview modal, dev harness, tests)",
-      "feat: complete Phase 2 detection engine (validators, patterns, detector, redactor, tests)",
-      "feat: complete Phase 1 shared foundation (constants, storage, vault, tests)"
+      "feat: complete Phase 2 detection engine (validators, patterns, detector, redactor, tests)"
     ],
-    "workingTree": "README.md, docs/demo-script.md, docs/test-prompts.md"
+    "workingTree": "README.md, eslint.config.js, manifest.json, src/ai/gemma.js, src/background/service-worker.js, src/content/interceptor.js, src/content/main.js, src/core/detector.js, src/core/patterns.js, src/ui/overlay/preview-modal.js, src/ui/popup/popup.css, src/ui/popup/popup.html, src/ui/popup/popup.js, tests/gemma.test.js, tests/tier2.test.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
@@ -840,11 +840,11 @@
     },
     {
       "path": "src/ai/gemma.js",
-      "classification": "stub"
+      "classification": "implemented (218 lines)"
     },
     {
       "path": "src/background/service-worker.js",
-      "classification": "implemented (42 lines)"
+      "classification": "implemented (87 lines)"
     },
     {
       "path": "src/content/adapters/chatgpt.js",
@@ -856,19 +856,19 @@
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (174 lines)"
+      "classification": "implemented (258 lines)"
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (89 lines)"
+      "classification": "implemented (104 lines)"
     },
     {
       "path": "src/core/detector.js",
-      "classification": "implemented (169 lines)"
+      "classification": "implemented (260 lines)"
     },
     {
       "path": "src/core/patterns.js",
-      "classification": "implemented (19 lines)"
+      "classification": "implemented (33 lines)"
     },
     {
       "path": "src/core/redactor.js",
@@ -912,19 +912,19 @@
     },
     {
       "path": "src/ui/overlay/preview-modal.js",
-      "classification": "implemented (243 lines)"
+      "classification": "implemented (245 lines)"
     },
     {
       "path": "src/ui/popup/popup.css",
-      "classification": "implemented (237 lines)"
+      "classification": "implemented (310 lines)"
     },
     {
       "path": "src/ui/popup/popup.html",
-      "classification": "implemented (72 lines)"
+      "classification": "implemented (85 lines)"
     },
     {
       "path": "src/ui/popup/popup.js",
-      "classification": "implemented (112 lines)"
+      "classification": "implemented (125 lines)"
     },
     {
       "path": "src/ui/shared.css",
@@ -939,6 +939,10 @@
       "classification": "implemented (94 lines)"
     },
     {
+      "path": "tests/gemma.test.js",
+      "classification": "implemented (96 lines)"
+    },
+    {
       "path": "tests/modal.test.js",
       "classification": "implemented (25 lines)"
     },
@@ -948,6 +952,10 @@
     },
     {
       "path": "tests/storage.test.js",
+      "classification": "implemented (60 lines)"
+    },
+    {
+      "path": "tests/tier2.test.js",
       "classification": "implemented (60 lines)"
     },
     {

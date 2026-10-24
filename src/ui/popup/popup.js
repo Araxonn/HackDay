@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const storage = SafeShield.storage;
 
   const toggle = document.getElementById('shield-toggle');
+  const aiToggle = document.getElementById('ai-toggle');
   const statusCard = document.getElementById('status-card');
   const statusText = document.getElementById('status-text');
   const totalCountEl = document.getElementById('total-count');
@@ -86,6 +87,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggle.checked = isEnabled;
   checkTabStatus(isEnabled);
 
+  if (aiToggle && typeof storage.getAiAssist === 'function') {
+    const isAiEnabled = await storage.getAiAssist();
+    aiToggle.checked = Boolean(isAiEnabled);
+
+    aiToggle.addEventListener('change', async () => {
+      await storage.setAiAssist(aiToggle.checked);
+    });
+  }
+
   // Load and render initial stats
   const initialStats = await storage.getStats();
   renderStats(initialStats);
@@ -102,6 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (change.key === 'enabled') {
       toggle.checked = Boolean(change.newValue);
       checkTabStatus(Boolean(change.newValue));
+    }
+    if (change.key === 'aiAssist' && aiToggle) {
+      aiToggle.checked = Boolean(change.newValue);
     }
     if (change.key === 'stats') {
       renderStats(change.newValue);

@@ -72,9 +72,74 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return;
     }
 
-    const { redactedText, entities, counts } = redactResult;
+    let { redactedText } = redactResult;
+    const entities = [...(redactResult.entities || [])];
+    const counts = { ...(redactResult.counts || {}) };
+    let aiNote = null;
 
-    // If no sensitive data found, allow submission to proceed untouched
+    // Optional Local Gemma Assist (only if explicitly enabled by user)
+    try {
+      const isAiEnabled = storage && typeof storage.getAiAssist === 'function'
+        ? await storage.getAiAssist()
+        : false;
+
+      const words = redactedText.trim().split(/\s+/).filter(Boolean);
+      // Skip if under 3 words or if structured PII is still detected
+      const hasRemainingStructuredPII = SafeShield.detector
+        ? SafeShield.detector.detect(redactedText).length > 0
+        : false;
+
+      if (isAiEnabled && words.length >= 3 && !hasRemainingStructuredPII && typeof chrome !== 'undefined' && chrome.runtime) {
+        const aiRes = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: 'SS_AI_CLASSIFY', text: redactedText },
+            (resp) => {
+              if (chrome.runtime.lastError || !resp) {
+                resolve({ ok: false, error: 'unavailable' });
+              } else {
+                resolve(resp);
+              }
+            }
+          );
+        });
+
+        if (aiRes && aiRes.ok && Array.isArray(aiRes.spans) && aiRes.spans.length > 0) {
+          let nameIndex = 0;
+          let addrIndex = 0;
+          for (const span of aiRes.spans) {
+            if (redactedText.includes(span.text)) {
+              let placeholder;
+              if (span.type === 'NAME') {
+                nameIndex++;
+                placeholder = SafeShield.constants
+                  ? SafeShield.constants.makePlaceholder('NAME', nameIndex)
+                  : `[NAME_${nameIndex}]`;
+                counts.NAME = (counts.NAME || 0) + 1;
+              } else {
+                addrIndex++;
+                placeholder = SafeShield.constants
+                  ? SafeShield.constants.makePlaceholder('ADDRESS', addrIndex)
+                  : `[ADDRESS_${addrIndex}]`;
+                counts.ADDRESS = (counts.ADDRESS || 0) + 1;
+              }
+              redactedText = redactedText.split(span.text).join(placeholder);
+              entities.push({
+                placeholder,
+                type: span.type,
+                original: span.text,
+              });
+            }
+          }
+        } else if (aiRes && !aiRes.ok) {
+          aiNote = 'AI check unavailable: only pattern detection ran';
+        }
+      }
+    } catch {
+      // AI failure NEVER blocks the send and NEVER changes regex result
+      aiNote = 'AI check unavailable: only pattern detection ran';
+    }
+
+    // If neither regex nor AI found entities, allow submission to proceed untouched
     if (!entities || entities.length === 0) {
       return;
     }
@@ -100,6 +165,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         redactedText,
         entities,
         counts,
+        note: aiNote,
       });
 
       const action = modalResult ? modalResult.action : 'cancel';
@@ -161,6 +227,28 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         }
       },
       true // Capture phase
+    );
+
+    // Capture-phase paste listener with proactive warning banner
+    composerEl.addEventListener(
+      'paste',
+      (e) => {
+        if (!isEnabled || isBypassing) return;
+        try {
+          const clipboardText = e.clipboardData ? e.clipboardData.getData('text') : '';
+          if (clipboardText && SafeShield.detector) {
+            const matches = SafeShield.detector.detect(clipboardText);
+            if (matches && matches.length > 0 && SafeShield.modal) {
+              SafeShield.modal.warn(
+                `Sensitive data (${matches.map((m) => m.type).join(', ')}) detected in paste. SafeShield will redact before sending.`
+              );
+            }
+          }
+        } catch (pasteErr) {
+          console.error('SafeShield paste check error:', pasteErr);
+        }
+      },
+      true
     );
 
     // Capture-phase click listener on document for any send button clicks

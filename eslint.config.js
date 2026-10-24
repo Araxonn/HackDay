@@ -14,6 +14,7 @@ module.exports = [
         ...globals.node,
         SafeShield: 'writable',
         chrome: 'readonly',
+        importScripts: 'readonly',
       },
     },
     rules: {
