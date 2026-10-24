@@ -1,5 +1,187 @@
-// Purpose: Detect sensitive data in text; owner: Member 1.
-// Export template (commented until implementation):
-// globalThis.SafeShield = globalThis.SafeShield || {};
-// globalThis.SafeShield.detector = { <exports> };
-// if (typeof module !== 'undefined') module.exports = globalThis.SafeShield.detector;
+// SafeShield PII Detector
+// Discovers sensitive identifiers, validates them, and resolves overlaps
+globalThis.SafeShield = globalThis.SafeShield || {};
+
+(function () {
+  const constants = SafeShield.constants || {};
+  const PII_TYPES = constants.PII_TYPES || {
+    PHONE: 'PHONE',
+    EMAIL: 'EMAIL',
+    AADHAAR: 'AADHAAR',
+    PAN: 'PAN',
+  };
+
+  function getPatterns() {
+    return SafeShield.patterns || {};
+  }
+
+  function getValidators() {
+    return SafeShield.validators || {};
+  }
+
+  function isValidPhoneMatch(matchStr) {
+    const digits = matchStr.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return /^[6-9]\d{9}$/.test(digits);
+    }
+    if (digits.length === 11 && digits.startsWith('0')) {
+      return /^[6-9]\d{9}$/.test(digits.slice(1));
+    }
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return /^[6-9]\d{9}$/.test(digits.slice(2));
+    }
+    return false;
+  }
+
+  /**
+   * Detects sensitive identifiers in the input text.
+   * Returns [{ type, start, end, value }] sorted by start ascending and non-overlapping.
+   */
+  function detect(text) {
+    if (!text || typeof text !== 'string') {
+      return [];
+    }
+
+    const patterns = getPatterns();
+    const validators = getValidators();
+    const normalize = validators.normalizeDigits || ((t) => t);
+
+    // Normalize Devanagari numerals to ASCII (guaranteed 1:1 character mapping)
+    const normalized = normalize(text);
+    const candidates = [];
+
+    // 1. Aadhaar detection (Priority 10)
+    if (patterns.AADHAAR) {
+      const regex = new RegExp(patterns.AADHAAR.source, patterns.AADHAAR.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        const matchedText = match[0];
+        if (validators.isValidAadhaar && validators.isValidAadhaar(matchedText)) {
+          candidates.push({
+            type: PII_TYPES.AADHAAR,
+            start: match.index,
+            end: match.index + matchedText.length,
+            priority: 10,
+          });
+        }
+      }
+    }
+
+    // 2. PAN detection (Priority 8) - Run on normalized uppercase
+    if (patterns.PAN) {
+      const regex = new RegExp(patterns.PAN.source, patterns.PAN.flags);
+      let match;
+      // PANs in India are officially uppercase; check original text case to avoid matching lowercase words
+      while ((match = regex.exec(text)) !== null) {
+        const matchedText = match[0];
+        if (validators.isValidPAN && validators.isValidPAN(matchedText)) {
+          candidates.push({
+            type: PII_TYPES.PAN,
+            start: match.index,
+            end: match.index + matchedText.length,
+            priority: 8,
+          });
+        }
+      }
+    }
+
+    // 3. Email detection (Priority 7)
+    if (patterns.EMAIL) {
+      const regex = new RegExp(patterns.EMAIL.source, patterns.EMAIL.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        const matchedText = match[0];
+        candidates.push({
+          type: PII_TYPES.EMAIL,
+          start: match.index,
+          end: match.index + matchedText.length,
+          priority: 7,
+        });
+      }
+    }
+
+    // 4. Phone detection (Priority 5)
+    if (patterns.PHONE) {
+      const regex = new RegExp(patterns.PHONE.source, patterns.PHONE.flags);
+      let match;
+      while ((match = regex.exec(normalized)) !== null) {
+        const matchedText = match[0];
+        if (isValidPhoneMatch(matchedText)) {
+          candidates.push({
+            type: PII_TYPES.PHONE,
+            start: match.index,
+            end: match.index + matchedText.length,
+            priority: 5,
+          });
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      return [];
+    }
+
+    // Overlap resolution
+    // Valid Aadhaar beats phone match on the same digits; higher priority beats lower priority
+    const survives = candidates.filter((cand) => {
+      for (const other of candidates) {
+        if (cand === other) continue;
+        const overlaps = Math.max(cand.start, other.start) < Math.min(cand.end, other.end);
+        if (overlaps) {
+          // Special rule: Valid Aadhaar always beats Phone
+          if (cand.type === PII_TYPES.PHONE && other.type === PII_TYPES.AADHAAR) {
+            return false;
+          }
+          if (cand.type === PII_TYPES.AADHAAR && other.type === PII_TYPES.PHONE) {
+            continue;
+          }
+          // Priority check
+          if (other.priority > cand.priority) {
+            return false;
+          }
+          if (other.priority === cand.priority) {
+            const candLen = cand.end - cand.start;
+            const otherLen = other.end - other.start;
+            if (otherLen > candLen) return false;
+            if (otherLen === candLen && other.start < cand.start) return false;
+          }
+        }
+      }
+      return true;
+    });
+
+    // Sort by start ascending
+    survives.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+    // Ensure non-overlapping in sequential order
+    const results = [];
+    for (const item of survives) {
+      if (results.length === 0) {
+        results.push(item);
+      } else {
+        const prev = results[results.length - 1];
+        if (item.start >= prev.end) {
+          results.push(item);
+        }
+      }
+    }
+
+    // Slice value from the ORIGINAL text
+    return results.map((m) => ({
+      type: m.type,
+      start: m.start,
+      end: m.end,
+      value: text.slice(m.start, m.end),
+    }));
+  }
+
+  const detector = {
+    detect,
+  };
+
+  SafeShield.detector = detector;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = SafeShield.detector;
+  }
+})();
