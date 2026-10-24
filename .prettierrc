@@ -1,1 +1,4 @@
-# Purpose: Prettier formatting configuration; owner: Member 4.
+# Purpose: Configure consistent formatting; owner: Member 4.
+singleQuote: true
+semi: true
+trailingComma: all
