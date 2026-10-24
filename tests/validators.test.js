@@ -30,13 +30,17 @@ test('isValidAadhaar accepts valid 12-digit numbers starting 2-9', () => {
   assert.equal(validators.isValidAadhaar(validNum), true);
   // With space grouping
   assert.equal(
-    validators.isValidAadhaar(`${validNum.slice(0, 4)} ${validNum.slice(4, 8)} ${validNum.slice(8)}`),
-    true
+    validators.isValidAadhaar(
+      `${validNum.slice(0, 4)} ${validNum.slice(4, 8)} ${validNum.slice(8)}`,
+    ),
+    true,
   );
   // With hyphen grouping
   assert.equal(
-    validators.isValidAadhaar(`${validNum.slice(0, 4)}-${validNum.slice(4, 8)}-${validNum.slice(8)}`),
-    true
+    validators.isValidAadhaar(
+      `${validNum.slice(0, 4)}-${validNum.slice(4, 8)}-${validNum.slice(8)}`,
+    ),
+    true,
   );
 });
 

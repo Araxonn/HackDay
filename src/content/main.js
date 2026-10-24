@@ -64,7 +64,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   async function getStatusResponse() {
     const state = getStatus();
     let ai = false;
-    if (SafeShield.storage && typeof SafeShield.storage.getAiAssist === 'function') {
+    if (
+      SafeShield.storage &&
+      typeof SafeShield.storage.getAiAssist === 'function'
+    ) {
       try {
         ai = await SafeShield.storage.getAiAssist();
       } catch {
@@ -75,7 +78,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   }
 
   // Answer status requests from popup
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  if (
+    typeof chrome !== 'undefined' &&
+    chrome.runtime &&
+    chrome.runtime.onMessage
+  ) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.type === 'SS_GET_STATUS') {
         getStatusResponse().then((res) => {

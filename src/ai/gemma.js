@@ -95,7 +95,12 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     for (const item of rawSpans) {
       if (!item || typeof item.text !== 'string') continue;
       const t = item.text.trim();
-      const type = item.type === 'ADDRESS' ? 'ADDRESS' : item.type === 'NAME' ? 'NAME' : null;
+      const type =
+        item.type === 'ADDRESS'
+          ? 'ADDRESS'
+          : item.type === 'NAME'
+            ? 'NAME'
+            : null;
 
       if (!type) continue;
       if (t.length < 2 || t.length > 120) continue;
@@ -122,7 +127,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
    */
   async function classify(text, options, customFetch) {
     const opts = { ...DEFAULTS, ...(options || {}) };
-    const fetchFn = customFetch || (typeof fetch !== 'undefined' ? fetch : null);
+    const fetchFn =
+      customFetch || (typeof fetch !== 'undefined' ? fetch : null);
 
     if (!fetchFn) {
       return { ok: false, error: 'unavailable' };
@@ -136,7 +142,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     const input = (text || '').slice(0, opts.maxChars);
 
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const controller =
+      typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timeoutId = controller
       ? setTimeout(() => controller.abort(), opts.timeoutMs)
       : null;
@@ -168,7 +175,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       let parsedContent;
       try {
         const rawContent = json && json.message && json.message.content;
-        parsedContent = typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
+        parsedContent =
+          typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
       } catch {
         return { ok: false, error: 'bad-response' };
       }
@@ -193,7 +201,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
    */
   async function ping(baseUrl, customFetch) {
     const url = baseUrl || DEFAULTS.baseUrl;
-    const fetchFn = customFetch || (typeof fetch !== 'undefined' ? fetch : null);
+    const fetchFn =
+      customFetch || (typeof fetch !== 'undefined' ? fetch : null);
 
     if (!fetchFn) {
       return { ok: false, error: 'unavailable' };

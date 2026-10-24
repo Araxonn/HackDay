@@ -2,7 +2,8 @@
 globalThis.SafeShield = globalThis.SafeShield || {};
 
 (function () {
-  const STORAGE_KEYS = (SafeShield.constants && SafeShield.constants.STORAGE_KEYS) || {
+  const STORAGE_KEYS = (SafeShield.constants &&
+    SafeShield.constants.STORAGE_KEYS) || {
     ENABLED: 'enabled',
     STATS: 'stats',
     AI_ASSIST: 'aiAssist',
@@ -23,7 +24,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   const memoryListeners = new Set();
 
   function notifyListeners(key, newValue, oldValue) {
-    if (key !== STORAGE_KEYS.ENABLED && key !== STORAGE_KEYS.STATS && key !== STORAGE_KEYS.AI_ASSIST) {
+    if (
+      key !== STORAGE_KEYS.ENABLED &&
+      key !== STORAGE_KEYS.STATS &&
+      key !== STORAGE_KEYS.AI_ASSIST
+    ) {
       return;
     }
     for (const cb of memoryListeners) {
@@ -40,11 +45,18 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return new Promise((resolve) => {
         chrome.storage.local.get([STORAGE_KEYS.ENABLED], (res) => {
           if (chrome.runtime && chrome.runtime.lastError) {
-            console.error('Storage getEnabled error:', chrome.runtime.lastError);
+            console.error(
+              'Storage getEnabled error:',
+              chrome.runtime.lastError,
+            );
             resolve(true);
             return;
           }
-          resolve(res[STORAGE_KEYS.ENABLED] !== undefined ? Boolean(res[STORAGE_KEYS.ENABLED]) : true);
+          resolve(
+            res[STORAGE_KEYS.ENABLED] !== undefined
+              ? Boolean(res[STORAGE_KEYS.ENABLED])
+              : true,
+          );
         });
       });
     }
@@ -80,7 +92,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
             resolve({});
             return;
           }
-          resolve(res[STORAGE_KEYS.STATS] ? { ...res[STORAGE_KEYS.STATS] } : {});
+          resolve(
+            res[STORAGE_KEYS.STATS] ? { ...res[STORAGE_KEYS.STATS] } : {},
+          );
         });
       });
     }

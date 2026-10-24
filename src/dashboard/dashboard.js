@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Reset confirmation
   btnReset.addEventListener('click', async () => {
     const confirmed = window.confirm(
-      'Are you sure you want to reset all SafeShield privacy statistics back to zero? This cannot be undone.'
+      'Are you sure you want to reset all SafeShield privacy statistics back to zero? This cannot be undone.',
     );
     if (confirmed) {
       await storage.resetStats();

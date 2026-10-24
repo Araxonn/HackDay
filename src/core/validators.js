@@ -103,7 +103,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   function normalizeDigits(text) {
     if (!text || typeof text !== 'string') return text || '';
     return text.replace(/[\u0966-\u096F]/g, (ch) =>
-      String(ch.charCodeAt(0) - 0x0966)
+      String(ch.charCodeAt(0) - 0x0966),
     );
   }
 

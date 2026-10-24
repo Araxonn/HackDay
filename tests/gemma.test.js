@@ -19,7 +19,8 @@ test('assertLoopback accepts localhost and 127.0.0.1 and rejects all other hosts
 });
 
 test('extractSpans keeps only valid literal spans without square brackets', () => {
-  const sourceText = 'Hello my name is Ramesh Kumar and I live at Indiranagar Bengaluru.';
+  const sourceText =
+    'Hello my name is Ramesh Kumar and I live at Indiranagar Bengaluru.';
   const rawSpans = [
     { type: 'NAME', text: 'Ramesh Kumar' },
     { type: 'ADDRESS', text: 'Indiranagar Bengaluru' },
@@ -57,7 +58,8 @@ test('classify with injected fake fetch: successful classification', async () =>
     };
   };
 
-  const text = 'Profile for Aarav Gupta at Koramangala 4th Block with ID [PAN_1].';
+  const text =
+    'Profile for Aarav Gupta at Koramangala 4th Block with ID [PAN_1].';
   const result = await gemma.classify(text, {}, fakeFetch);
 
   assert.equal(result.ok, true);

@@ -5,6 +5,7 @@ Follow this step-by-step walk-through to test or demonstrate SafeShield end-to-e
 ---
 
 ### Prerequisites
+
 1. Open Google Chrome.
 2. Navigate to `chrome://extensions/`.
 3. Enable **Developer mode** (toggle in upper right).
@@ -14,16 +15,21 @@ Follow this step-by-step walk-through to test or demonstrate SafeShield end-to-e
 ---
 
 ### Step 1: Paste Prompt with Synthetic PII
+
 In ChatGPT's prompt composer at the bottom of the page, paste the following prompt containing synthetic Indian identifiers:
+
 ```text
 Please summarize this profile: Name Raj, email raj.kumar@example.com, phone +91 98765 43210, PAN ABCPA1234Z, and Aadhaar 2098 7654 3212.
 ```
+
 Press **Enter** (or click the Send button).
 
 ---
 
 ### Step 2: Review Detection Preview Modal
+
 Notice that the submission is **immediately intercepted** before any network request is initiated.
+
 - An isolated Shadow DOM modal titled **SafeShield Protection** appears.
 - Review the detected identifiers list:
   - `PHONE`: `[PHONE_1]` with masked value `+9••••••10`
@@ -35,6 +41,7 @@ Notice that the submission is **immediately intercepted** before any network req
 ---
 
 ### Step 3: Send Redacted Prompt to ChatGPT
+
 1. Click the green **Send redacted** button in the modal.
 2. Observe ChatGPT's chat stream:
    - ChatGPT receives ONLY the redacted prompt containing `[EMAIL_1]`, `[PHONE_1]`, `[PAN_1]`, and `[AADHAAR_1]`.
@@ -45,6 +52,7 @@ Notice that the submission is **immediately intercepted** before any network req
 ---
 
 ### Step 4: Test Local Restoration
+
 1. Paste another test prompt into ChatGPT:
    ```text
    Contact priya.sharma@example.in or 9876543210 to reschedule.
@@ -58,6 +66,7 @@ Notice that the submission is **immediately intercepted** before any network req
 ---
 
 ### Step 5: Toggle Protection & Explore Privacy Dashboard
+
 1. Click the **SafeShield extension icon** in the Chrome toolbar to open the popup:
    - Confirm status shows **Active on this page** (green indicator).
    - See the live breakdown of protected items.

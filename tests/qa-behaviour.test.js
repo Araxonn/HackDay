@@ -70,7 +70,10 @@ class FakeElement {
   }
 
   getAttribute(name) {
-    return this.attributes.get(name) || (name === 'contenteditable' && this.isContentEditable ? 'true' : null);
+    return (
+      this.attributes.get(name) ||
+      (name === 'contenteditable' && this.isContentEditable ? 'true' : null)
+    );
   }
 
   setAttribute(name, val) {
@@ -141,7 +144,10 @@ class FakeEvent {
 
 test('1. Enter with no PII: send is released unchanged, no modal', async () => {
   const SS = setupSafeShieldEnv();
-  const composerEl = new FakeElement('TEXTAREA', 'Tell me a story about space exploration');
+  const composerEl = new FakeElement(
+    'TEXTAREA',
+    'Tell me a story about space exploration',
+  );
 
   let modalShown = false;
   SS.modal = {
@@ -161,9 +167,21 @@ test('1. Enter with no PII: send is released unchanged, no modal', async () => {
   const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
-  assert.equal(enterEvt.defaultPrevented, false, 'Send event must not be blocked when no PII is found');
-  assert.equal(modalShown, false, 'Modal should not be shown when no PII is found');
-  assert.equal(composerEl.value, 'Tell me a story about space exploration', 'Composer text must remain untouched');
+  assert.equal(
+    enterEvt.defaultPrevented,
+    false,
+    'Send event must not be blocked when no PII is found',
+  );
+  assert.equal(
+    modalShown,
+    false,
+    'Modal should not be shown when no PII is found',
+  );
+  assert.equal(
+    composerEl.value,
+    'Tell me a story about space exploration',
+    'Composer text must remain untouched',
+  );
 });
 
 test('2. Enter with PII: send is paused, text replaced with redacted text, modal.show called with entities and counts', async () => {
@@ -192,7 +210,11 @@ test('2. Enter with PII: send is paused, text replaced with redacted text, modal
   const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
-  assert.equal(enterEvt.defaultPrevented, true, 'Submission event must be paused/blocked immediately');
+  assert.equal(
+    enterEvt.defaultPrevented,
+    true,
+    'Submission event must be paused/blocked immediately',
+  );
   assert.ok(modalPayload, 'modal.show must be called');
   assert.equal(modalPayload.counts.PHONE, 1);
   assert.equal(modalPayload.counts.EMAIL, 1);
@@ -250,11 +272,23 @@ test('3. Modal action "send": only redacted text submitted; vault.remember and s
   const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
-  assert.equal(vaultRememberCalls, 1, 'vault.remember must be called exactly once');
-  assert.equal(addCountsCalls, 1, 'storage.addCounts must be called exactly once');
+  assert.equal(
+    vaultRememberCalls,
+    1,
+    'vault.remember must be called exactly once',
+  );
+  assert.equal(
+    addCountsCalls,
+    1,
+    'storage.addCounts must be called exactly once',
+  );
   assert.deepEqual(addedCounts, { PHONE: 1 });
   assert.ok(rememberedEntities[0].placeholder === '[PHONE_1]');
-  assert.equal(submittedText, 'My phone is [PHONE_1]', 'Submitted text must be redacted');
+  assert.equal(
+    submittedText,
+    'My phone is [PHONE_1]',
+    'Submitted text must be redacted',
+  );
   assert.equal(submittedText.includes('9876543210'), false);
 });
 
@@ -284,7 +318,11 @@ test('4. Modal action "cancel": nothing is submitted, composer text handling res
 
   assert.equal(submitCalled, false, 'Nothing should be submitted on cancel');
   // When canceled, interceptor restores original draft so user does not lose input
-  assert.equal(composerEl.value, prompt, 'Composer text must be restored to original draft on cancel');
+  assert.equal(
+    composerEl.value,
+    prompt,
+    'Composer text must be restored to original draft on cancel',
+  );
 });
 
 test('5. Modal action "restore": originals put back locally and NOT submitted', async () => {
@@ -312,7 +350,11 @@ test('5. Modal action "restore": originals put back locally and NOT submitted', 
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
   assert.equal(submitCalled, false, 'Nothing should be submitted on restore');
-  assert.equal(composerEl.value, prompt, 'Originals must be put back locally into composer for manual editing');
+  assert.equal(
+    composerEl.value,
+    prompt,
+    'Originals must be put back locally into composer for manual editing',
+  );
 });
 
 test('6. Send-button click is intercepted the same way as Enter', async () => {
@@ -335,11 +377,23 @@ test('6. Send-button click is intercepted the same way as Enter', async () => {
     findSendButton: () => sendButton,
   };
 
-  const clickEvt = new FakeEvent('click', { bubbles: true, cancelable: true, target: sendButton });
+  const clickEvt = new FakeEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    target: sendButton,
+  });
   await SS.interceptor.handleSubmission(clickEvt, composerEl, adapter);
 
-  assert.equal(clickEvt.defaultPrevented, true, 'Send button click must be intercepted and defaultPrevented');
-  assert.equal(modalShown, true, 'Modal must be shown on Send button click with PII');
+  assert.equal(
+    clickEvt.defaultPrevented,
+    true,
+    'Send button click must be intercepted and defaultPrevented',
+  );
+  assert.equal(
+    modalShown,
+    true,
+    'Modal must be shown on Send button click with PII',
+  );
 });
 
 test('7. Shift+Enter does not trigger interception. IME composition does not trigger it', async () => {
@@ -363,17 +417,32 @@ test('7. Shift+Enter does not trigger interception. IME composition does not tri
   SS.interceptor.attachHooks(composerEl, adapter);
 
   // 1. Shift+Enter
-  const shiftEnterEvt = new FakeEvent('keydown', { key: 'Enter', shiftKey: true, cancelable: true });
+  const shiftEnterEvt = new FakeEvent('keydown', {
+    key: 'Enter',
+    shiftKey: true,
+    cancelable: true,
+  });
   composerEl.dispatchEvent(shiftEnterEvt);
   assert.equal(modalShowCalls, 0, 'Shift+Enter must not trigger interception');
 
   // 2. IME composition
-  const imeEvt = new FakeEvent('keydown', { key: 'Enter', isComposing: true, cancelable: true });
+  const imeEvt = new FakeEvent('keydown', {
+    key: 'Enter',
+    isComposing: true,
+    cancelable: true,
+  });
   composerEl.dispatchEvent(imeEvt);
-  assert.equal(modalShowCalls, 0, 'IME composition must not trigger interception');
+  assert.equal(
+    modalShowCalls,
+    0,
+    'IME composition must not trigger interception',
+  );
 
   // 3. Normal Enter triggers it
-  const normalEnterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
+  const normalEnterEvt = new FakeEvent('keydown', {
+    key: 'Enter',
+    cancelable: true,
+  });
   composerEl.dispatchEvent(normalEnterEvt);
   await new Promise((r) => setTimeout(r, 20));
   assert.equal(modalShowCalls, 1, 'Standard Enter should trigger interception');
@@ -402,9 +471,21 @@ test('8. Protection toggled OFF: text passes through untouched', async () => {
   const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
-  assert.equal(enterEvt.defaultPrevented, false, 'Event must not be prevented when protection is off');
-  assert.equal(modalShown, false, 'Modal must not be shown when protection is off');
-  assert.equal(composerEl.value, prompt, 'Composer text must remain untouched when protection is off');
+  assert.equal(
+    enterEvt.defaultPrevented,
+    false,
+    'Event must not be prevented when protection is off',
+  );
+  assert.equal(
+    modalShown,
+    false,
+    'Modal must not be shown when protection is off',
+  );
+  assert.equal(
+    composerEl.value,
+    prompt,
+    'Composer text must remain untouched when protection is off',
+  );
 });
 
 test('9. Fail closed: force detect() to throw and force redact() to throw. The send must be blocked and modal.warn must be called', async () => {
@@ -430,8 +511,16 @@ test('9. Fail closed: force detect() to throw and force redact() to throw. The s
   const evtA = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(evtA, composerEl, adapter);
 
-  assert.equal(evtA.defaultPrevented, true, 'Send must be blocked (fail closed) when redact throws');
-  assert.equal(evtA._immediateStopped, true, 'Immediate propagation must be stopped when redact throws');
+  assert.equal(
+    evtA.defaultPrevented,
+    true,
+    'Send must be blocked (fail closed) when redact throws',
+  );
+  assert.equal(
+    evtA._immediateStopped,
+    true,
+    'Immediate propagation must be stopped when redact throws',
+  );
   assert.equal(warnCalls, 1, 'modal.warn must be called when redact throws');
 
   // Case B: composer.getText throws
@@ -442,7 +531,11 @@ test('9. Fail closed: force detect() to throw and force redact() to throw. The s
   const evtB = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(evtB, composerEl, adapter);
 
-  assert.equal(evtB.defaultPrevented, true, 'Send must be blocked (fail closed) when getText throws');
+  assert.equal(
+    evtB.defaultPrevented,
+    true,
+    'Send must be blocked (fail closed) when getText throws',
+  );
   assert.equal(warnCalls, 2, 'modal.warn must be called when getText throws');
 });
 
@@ -490,12 +583,16 @@ test('10. setText returns false: prove the ORIGINAL unredacted text is never sub
   assert.equal(
     submitTriggered && submittedText === originalPrompt,
     false,
-    'CRITICAL PRIVACY BUG: When setText returns false, composer.submit was called and submitted the original unredacted prompt text from composerEl instead of failing closed!'
+    'CRITICAL PRIVACY BUG: When setText returns false, composer.submit was called and submitted the original unredacted prompt text from composerEl instead of failing closed!',
   );
-  assert.equal(modalShown, false, 'Modal must not be shown when setText fails closed');
+  assert.equal(
+    modalShown,
+    false,
+    'Modal must not be shown when setText fails closed',
+  );
 });
 
-test('11. Re-entrancy: the extension\'s own submit is not intercepted again (no infinite loop)', async () => {
+test("11. Re-entrancy: the extension's own submit is not intercepted again (no infinite loop)", async () => {
   const SS = setupSafeShieldEnv();
   const composerEl = new FakeElement('TEXTAREA', 'Contact 9876543210');
 
@@ -518,7 +615,10 @@ test('11. Re-entrancy: the extension\'s own submit is not intercepted again (no 
   let secondEventIntercepted = false;
   SS.composer.submit = () => {
     // When composer submits, it triggers an event
-    const reentrantEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
+    const reentrantEvt = new FakeEvent('keydown', {
+      key: 'Enter',
+      cancelable: true,
+    });
     SS.interceptor.handleSubmission(reentrantEvt, composerEl, adapter);
     if (reentrantEvt.defaultPrevented) {
       secondEventIntercepted = true;
@@ -530,7 +630,11 @@ test('11. Re-entrancy: the extension\'s own submit is not intercepted again (no 
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
   assert.equal(modalShowCount, 1, 'Modal should be shown only once');
-  assert.equal(secondEventIntercepted, false, 'Re-entrant event must bypass interception (isBypassing === true)');
+  assert.equal(
+    secondEventIntercepted,
+    false,
+    'Re-entrant event must bypass interception (isBypassing === true)',
+  );
 });
 
 test('12. Paste interception shows a warning for pasted PII and does not block normal paste', () => {
@@ -553,15 +657,26 @@ test('12. Paste interception shows a warning for pasted PII and does not block n
   const pasteEvt = new FakeEvent('paste', {
     cancelable: true,
     clipboardData: {
-      getData: (format) => (format === 'text' ? 'Pasting fake email: user@domain-test.com' : ''),
+      getData: (format) =>
+        format === 'text' ? 'Pasting fake email: user@domain-test.com' : '',
     },
   });
 
   composerEl.dispatchEvent(pasteEvt);
 
-  assert.equal(pasteEvt.defaultPrevented, false, 'Normal paste must NOT be blocked');
-  assert.ok(warnMessage, 'modal.warn must be called with sensitive data detected notice');
-  assert.ok(warnMessage.includes('EMAIL'), 'Warning message must mention detected type');
+  assert.equal(
+    pasteEvt.defaultPrevented,
+    false,
+    'Normal paste must NOT be blocked',
+  );
+  assert.ok(
+    warnMessage,
+    'modal.warn must be called with sensitive data detected notice',
+  );
+  assert.ok(
+    warnMessage.includes('EMAIL'),
+    'Warning message must mention detected type',
+  );
 });
 
 test('13. Status rules in main.js: active, off, unsupported', () => {
@@ -617,11 +732,19 @@ test('14. Idempotent placeholders and round-trip restoration with Hinglish and D
 
   // 1. Same value repeated gets the same placeholder
   const phoneEntities = result.entities.filter((e) => e.type === 'PHONE');
-  assert.equal(phoneEntities.length, 1, 'Repeated phone should only generate one unique entity');
+  assert.equal(
+    phoneEntities.length,
+    1,
+    'Repeated phone should only generate one unique entity',
+  );
   assert.equal(phoneEntities[0].placeholder, '[PHONE_1]');
 
   const emailEntities = result.entities.filter((e) => e.type === 'EMAIL');
-  assert.equal(emailEntities.length, 1, 'Repeated email should only generate one unique entity');
+  assert.equal(
+    emailEntities.length,
+    1,
+    'Repeated email should only generate one unique entity',
+  );
   assert.equal(emailEntities[0].placeholder, '[EMAIL_1]');
 
   // Counts reflect total occurrences
@@ -632,7 +755,11 @@ test('14. Idempotent placeholders and round-trip restoration with Hinglish and D
 
   // 2. Round-trip restoration guarantee: restore(redacted, entities) === original text
   const restored = redactor.restore(result.redactedText, result.entities);
-  assert.equal(restored, text, 'Restored text must match original exactly character for character');
+  assert.equal(
+    restored,
+    text,
+    'Restored text must match original exactly character for character',
+  );
 });
 
 test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does not block send; modal note set; structured PII skips AI', async () => {
@@ -659,7 +786,10 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
 
   // Case 1: AI Off -> no SS_AI_CLASSIFY message
   SS.storage.getAiAssist = async () => false;
-  const composerEl1 = new FakeElement('TEXTAREA', 'My email is test@corp.in and my manager is Dr. Ramesh Sharma');
+  const composerEl1 = new FakeElement(
+    'TEXTAREA',
+    'My email is test@corp.in and my manager is Dr. Ramesh Sharma',
+  );
   let modalNote1 = null;
   SS.modal = {
     show: async (p) => {
@@ -674,8 +804,16 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   };
 
   messageSent = null;
-  await SS.interceptor.handleSubmission(new FakeEvent('keydown', { key: 'Enter', cancelable: true }), composerEl1, adapter);
-  assert.equal(messageSent, null, 'When AI is off, no message should be sent to background');
+  await SS.interceptor.handleSubmission(
+    new FakeEvent('keydown', { key: 'Enter', cancelable: true }),
+    composerEl1,
+    adapter,
+  );
+  assert.equal(
+    messageSent,
+    null,
+    'When AI is off, no message should be sent to background',
+  );
   assert.equal(modalNote1, null, 'When AI is off, modal note must be null');
 
   // Case 2: AI On, but structured PII still detected -> AI skipped
@@ -692,19 +830,33 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   };
   SS.redactor.redact = () => ({
     redactedText: 'This prompt has REMAINING_PII present here',
-    entities: [{ placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' }],
+    entities: [
+      { placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' },
+    ],
     counts: { PHONE: 1 },
   });
 
   messageSent = null;
-  const composerEl2 = new FakeElement('TEXTAREA', 'Test prompt with remaining PII');
-  await SS.interceptor.handleSubmission(new FakeEvent('keydown', { key: 'Enter', cancelable: true }), composerEl2, adapter);
-  assert.equal(messageSent, null, 'AI must be skipped if detect() still finds structured PII in redacted text');
+  const composerEl2 = new FakeElement(
+    'TEXTAREA',
+    'Test prompt with remaining PII',
+  );
+  await SS.interceptor.handleSubmission(
+    new FakeEvent('keydown', { key: 'Enter', cancelable: true }),
+    composerEl2,
+    adapter,
+  );
+  assert.equal(
+    messageSent,
+    null,
+    'AI must be skipped if detect() still finds structured PII in redacted text',
+  );
 
   // Case 3: AI On, clean text >= 3 words, model returns hallucinated span + valid span
   SS.detector.detect = () => []; // No remaining structured PII
   SS.redactor.redact = () => ({
-    redactedText: 'Please consult Dr. Ramesh Sharma regarding this project draft',
+    redactedText:
+      'Please consult Dr. Ramesh Sharma regarding this project draft',
     entities: [],
     counts: {},
   });
@@ -716,17 +868,31 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   };
 
   messageSent = null;
-  const composerEl3 = new FakeElement('TEXTAREA', 'Please consult Dr. Ramesh Sharma regarding this project draft');
-  await SS.interceptor.handleSubmission(new FakeEvent('keydown', { key: 'Enter', cancelable: true }), composerEl3, adapter);
+  const composerEl3 = new FakeElement(
+    'TEXTAREA',
+    'Please consult Dr. Ramesh Sharma regarding this project draft',
+  );
+  await SS.interceptor.handleSubmission(
+    new FakeEvent('keydown', { key: 'Enter', cancelable: true }),
+    composerEl3,
+    adapter,
+  );
 
-  assert.ok(messageSent, 'Message must be sent when AI is enabled and prompt is eligible');
+  assert.ok(
+    messageSent,
+    'Message must be sent when AI is enabled and prompt is eligible',
+  );
   assert.equal(messageSent.type, 'SS_AI_CLASSIFY');
   // Valid span was included
-  const nameEntity = modalEntities.find((e) => e.original === 'Dr. Ramesh Sharma');
+  const nameEntity = modalEntities.find(
+    (e) => e.original === 'Dr. Ramesh Sharma',
+  );
   assert.ok(nameEntity, 'Valid span must be redacted and added to entities');
   assert.equal(nameEntity.placeholder, '[NAME_1]');
   // Hallucinated span was dropped
-  const ghostEntity = modalEntities.find((e) => e.original.includes('Hallucinated'));
+  const ghostEntity = modalEntities.find((e) =>
+    e.original.includes('Hallucinated'),
+  );
   assert.equal(ghostEntity, undefined, 'Hallucinated span must be dropped');
 
   // Case 4: AI timeout / error -> never blocks send, note set in modal
@@ -735,7 +901,9 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   };
   SS.redactor.redact = () => ({
     redactedText: 'Phone is [PHONE_1] and check this prompt out',
-    entities: [{ placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' }],
+    entities: [
+      { placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' },
+    ],
     counts: { PHONE: 1 },
   });
 
@@ -745,8 +913,18 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
     return { action: 'cancel' };
   };
 
-  const composerEl4 = new FakeElement('TEXTAREA', 'Phone is 9876543210 and check this prompt out');
-  await SS.interceptor.handleSubmission(new FakeEvent('keydown', { key: 'Enter', cancelable: true }), composerEl4, adapter);
+  const composerEl4 = new FakeElement(
+    'TEXTAREA',
+    'Phone is 9876543210 and check this prompt out',
+  );
+  await SS.interceptor.handleSubmission(
+    new FakeEvent('keydown', { key: 'Enter', cancelable: true }),
+    composerEl4,
+    adapter,
+  );
 
-  assert.equal(noteReceived, 'AI check unavailable: only pattern detection ran');
+  assert.equal(
+    noteReceived,
+    'AI check unavailable: only pattern detection ran',
+  );
 });

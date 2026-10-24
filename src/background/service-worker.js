@@ -2,19 +2,27 @@
 // Maintains the extension action badge count and provides a loopback proxy for local Ollama
 
 try {
-  importScripts('../shared/constants.js', '../shared/storage.js', '../ai/gemma.js');
+  importScripts(
+    '../shared/constants.js',
+    '../shared/storage.js',
+    '../ai/gemma.js',
+  );
 } catch (e) {
   console.error('Service worker importScripts error:', e);
 }
 
 function updateBadge(stats) {
-  if (typeof chrome === 'undefined' || !chrome.action || !chrome.action.setBadgeText) {
+  if (
+    typeof chrome === 'undefined' ||
+    !chrome.action ||
+    !chrome.action.setBadgeText
+  ) {
     return;
   }
   stats = stats || {};
   const total = Object.values(stats).reduce(
     (acc, c) => acc + (typeof c === 'number' ? c : 0),
-    0
+    0,
   );
   const badgeText = total > 0 ? (total > 999 ? '999+' : String(total)) : '';
 
@@ -44,7 +52,11 @@ if (typeof chrome !== 'undefined' && chrome.runtime) {
 }
 
 // React to live storage updates
-if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+if (
+  typeof chrome !== 'undefined' &&
+  chrome.storage &&
+  chrome.storage.onChanged
+) {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.stats) {
       updateBadge(changes.stats.newValue);
@@ -53,7 +65,11 @@ if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged)
 }
 
 // SS_AI_CLASSIFY message bridge for local loopback Ollama
-if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+if (
+  typeof chrome !== 'undefined' &&
+  chrome.runtime &&
+  chrome.runtime.onMessage
+) {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || message.type !== 'SS_AI_CLASSIFY') {
       return false;

@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const email = stats.EMAIL || 0;
     const aadhaar = stats.AADHAAR || 0;
     const pan = stats.PAN || 0;
-    const total = Object.values(stats).reduce((acc, c) => acc + (typeof c === 'number' ? c : 0), 0);
+    const total = Object.values(stats).reduce(
+      (acc, c) => acc + (typeof c === 'number' ? c : 0),
+      0,
+    );
 
     totalCountEl.textContent = `${total} protected`;
     statPhone.textContent = String(phone);
@@ -58,24 +61,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Send status request to content script
-        chrome.tabs.sendMessage(activeTab.id, { type: 'SS_GET_STATUS' }, (response) => {
-          if (chrome.runtime.lastError || !response) {
-            // Content script not loaded or page unsupported
-            setStatusUI('unsupported', 'Not supported on this page');
-            return;
-          }
+        chrome.tabs.sendMessage(
+          activeTab.id,
+          { type: 'SS_GET_STATUS' },
+          (response) => {
+            if (chrome.runtime.lastError || !response) {
+              // Content script not loaded or page unsupported
+              setStatusUI('unsupported', 'Not supported on this page');
+              return;
+            }
 
-          // NEVER show "Active" unless state is strictly 'active'
-          if (response.state === 'active') {
-            setStatusUI('active', 'Active on this page');
-          } else if (response.state === 'off') {
-            setStatusUI('off', 'Protection paused');
-          } else if (response.state === 'error') {
-            setStatusUI('error', 'Protection error');
-          } else {
-            setStatusUI('unsupported', 'Not supported on this page');
-          }
-        });
+            // NEVER show "Active" unless state is strictly 'active'
+            if (response.state === 'active') {
+              setStatusUI('active', 'Active on this page');
+            } else if (response.state === 'off') {
+              setStatusUI('off', 'Protection paused');
+            } else if (response.state === 'error') {
+              setStatusUI('error', 'Protection error');
+            } else {
+              setStatusUI('unsupported', 'Not supported on this page');
+            }
+          },
+        );
       });
     } catch {
       setStatusUI('unsupported', 'Not supported on this page');
@@ -124,7 +131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Dashboard link click
   if (dashboardBtn) {
     dashboardBtn.addEventListener('click', () => {
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+      if (
+        typeof chrome !== 'undefined' &&
+        chrome.runtime &&
+        chrome.runtime.openOptionsPage
+      ) {
         chrome.runtime.openOptionsPage();
       } else {
         window.open('../dashboard/dashboard.html');

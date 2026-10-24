@@ -1,116 +1,154 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafeShield - Privacy Dashboard</title>
-  <link rel="stylesheet" href="../ui/shared.css">
-  <link rel="stylesheet" href="dashboard.css">
-</head>
-<body>
-  <div class="dashboard-container">
-    <header class="dashboard-header">
-      <div class="brand">
-        <img src="../../assets/icons/icon48.png" alt="" width="32" height="32" class="logo">
-        <div>
-          <h1 class="brand-title">SafeShield</h1>
-          <p class="brand-subtitle">Privacy & Protection Dashboard</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button type="button" id="btn-reset" class="btn-danger" aria-label="Reset all statistics">Reset statistics</button>
-      </div>
-    </header>
-
-    <main class="dashboard-content">
-      <!-- Total summary metric card -->
-      <section class="metric-card">
-        <div class="metric-header">
-          <span class="metric-title">Total Redactions</span>
-          <span class="shield-badge">Protected locally</span>
-        </div>
-        <div class="metric-value-wrap">
-          <span class="metric-number" id="total-redactions">0</span>
-          <span class="metric-desc">sensitive data items shielded from cloud AI</span>
-        </div>
-      </section>
-
-      <!-- Breakdown by type -->
-      <section class="card" id="breakdown-card">
-        <h2 class="card-title">Breakdown by Identifier Type</h2>
-
-        <!-- Empty state -->
-        <div class="empty-state" id="empty-state">
-          <div class="empty-icon">🛡️</div>
-          <h3 class="empty-title">No redactions recorded yet</h3>
-          <p class="empty-desc">
-            SafeShield is active and monitoring prompt submissions on ChatGPT.
-            As soon as personal identifiers are intercepted and redacted, your privacy statistics will display here.
-          </p>
-        </div>
-
-        <!-- Breakdown list with CSS bars -->
-        <div class="breakdown-list" id="breakdown-list" style="display: none;">
-          <div class="breakdown-item" data-type="PHONE">
-            <div class="item-header">
-              <span class="item-name">📞 Phone Numbers</span>
-              <span class="item-count" id="count-phone">0</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar bar-phone" id="bar-phone" style="width: 0%;"></div>
-            </div>
-          </div>
-
-          <div class="breakdown-item" data-type="EMAIL">
-            <div class="item-header">
-              <span class="item-name">✉️ Email Addresses</span>
-              <span class="item-count" id="count-email">0</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar bar-email" id="bar-email" style="width: 0%;"></div>
-            </div>
-          </div>
-
-          <div class="breakdown-item" data-type="AADHAAR">
-            <div class="item-header">
-              <span class="item-name">🪪 Aadhaar Numbers</span>
-              <span class="item-count" id="count-aadhaar">0</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar bar-aadhaar" id="bar-aadhaar" style="width: 0%;"></div>
-            </div>
-          </div>
-
-          <div class="breakdown-item" data-type="PAN">
-            <div class="item-header">
-              <span class="item-name">📑 PAN Card Numbers</span>
-              <span class="item-count" id="count-pan">0</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar bar-pan" id="bar-pan" style="width: 0%;"></div>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeShield - Privacy Dashboard</title>
+    <link rel="stylesheet" href="../ui/shared.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <header class="dashboard-header">
+        <div class="brand">
+          <img
+            src="../../assets/icons/icon48.png"
+            alt=""
+            width="32"
+            height="32"
+            class="logo"
+          />
+          <div>
+            <h1 class="brand-title">SafeShield</h1>
+            <p class="brand-subtitle">Privacy & Protection Dashboard</p>
           </div>
         </div>
-      </section>
-
-      <!-- Privacy statement -->
-      <section class="privacy-box">
-        <div class="privacy-icon">🔒</div>
-        <div>
-          <h3 class="privacy-title">Local-First Privacy Guarantee</h3>
-          <p class="privacy-text">
-            All detection and redaction processes run 100% locally on your computer inside your browser.
-            <strong>SafeShield never stores, transmits, or logs your original prompt text or detected personal data.</strong>
-            Only anonymous aggregate counts (e.g. 5 phones redacted) are persisted locally in <code>chrome.storage.local</code>.
-            Temporary placeholder mappings live exclusively in ephemeral content script memory and are discarded when you close or leave the tab.
-          </p>
+        <div class="header-actions">
+          <button
+            type="button"
+            id="btn-reset"
+            class="btn-danger"
+            aria-label="Reset all statistics"
+          >
+            Reset statistics
+          </button>
         </div>
-      </section>
-    </main>
-  </div>
+      </header>
 
-  <script src="../shared/constants.js"></script>
-  <script src="../shared/storage.js"></script>
-  <script src="dashboard.js"></script>
-</body>
+      <main class="dashboard-content">
+        <!-- Total summary metric card -->
+        <section class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Total Redactions</span>
+            <span class="shield-badge">Protected locally</span>
+          </div>
+          <div class="metric-value-wrap">
+            <span class="metric-number" id="total-redactions">0</span>
+            <span class="metric-desc"
+              >sensitive data items shielded from cloud AI</span
+            >
+          </div>
+        </section>
+
+        <!-- Breakdown by type -->
+        <section class="card" id="breakdown-card">
+          <h2 class="card-title">Breakdown by Identifier Type</h2>
+
+          <!-- Empty state -->
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">🛡️</div>
+            <h3 class="empty-title">No redactions recorded yet</h3>
+            <p class="empty-desc">
+              SafeShield is active and monitoring prompt submissions on ChatGPT.
+              As soon as personal identifiers are intercepted and redacted, your
+              privacy statistics will display here.
+            </p>
+          </div>
+
+          <!-- Breakdown list with CSS bars -->
+          <div class="breakdown-list" id="breakdown-list" style="display: none">
+            <div class="breakdown-item" data-type="PHONE">
+              <div class="item-header">
+                <span class="item-name">📞 Phone Numbers</span>
+                <span class="item-count" id="count-phone">0</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-bar bar-phone"
+                  id="bar-phone"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="breakdown-item" data-type="EMAIL">
+              <div class="item-header">
+                <span class="item-name">✉️ Email Addresses</span>
+                <span class="item-count" id="count-email">0</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-bar bar-email"
+                  id="bar-email"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="breakdown-item" data-type="AADHAAR">
+              <div class="item-header">
+                <span class="item-name">🪪 Aadhaar Numbers</span>
+                <span class="item-count" id="count-aadhaar">0</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-bar bar-aadhaar"
+                  id="bar-aadhaar"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="breakdown-item" data-type="PAN">
+              <div class="item-header">
+                <span class="item-name">📑 PAN Card Numbers</span>
+                <span class="item-count" id="count-pan">0</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-bar bar-pan"
+                  id="bar-pan"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Privacy statement -->
+        <section class="privacy-box">
+          <div class="privacy-icon">🔒</div>
+          <div>
+            <h3 class="privacy-title">Local-First Privacy Guarantee</h3>
+            <p class="privacy-text">
+              All detection and redaction processes run 100% locally on your
+              computer inside your browser.
+              <strong
+                >SafeShield never stores, transmits, or logs your original
+                prompt text or detected personal data.</strong
+              >
+              Only anonymous aggregate counts (e.g. 5 phones redacted) are
+              persisted locally in <code>chrome.storage.local</code>. Temporary
+              placeholder mappings live exclusively in ephemeral content script
+              memory and are discarded when you close or leave the tab.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="../shared/constants.js"></script>
+    <script src="../shared/storage.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
 </html>

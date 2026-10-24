@@ -7,6 +7,7 @@ These contracts are the authoritative specification for all components in SafeSh
 ## 1. Core Detection & Redaction
 
 ### `detect(text) -> [{ type, start, end, value }]`
+
 - **Input**: `text` (string).
 - **Output**: Array of match objects `{ type, start, end, value }`.
 - **Invariants**:
@@ -18,6 +19,7 @@ These contracts are the authoritative specification for all components in SafeSh
   - Higher-priority matches take precedence when overlapping (e.g., valid Aadhaar wins over phone on matching digits).
 
 ### `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts: { [type]: count } }`
+
 - **Input**: `text` (string).
 - **Output**:
   - `redactedText`: string with sensitive values replaced by placeholders `[TYPE_n]`.
@@ -31,9 +33,10 @@ These contracts are the authoritative specification for all components in SafeSh
   - Replacements are made from the end of the string backward so preceding offsets remain valid.
 
 ### `restore(text, entities) -> string`
+
 - **Round-trip guarantee**:
   ```javascript
-  restore(redact(x).redactedText, entities) === x
+  restore(redact(x).redactedText, entities) === x;
   ```
 - **Input**: `text` (string with placeholders) and `entities` (array of `{ placeholder, original }`).
 - **Output**: string with all known placeholders restored to their corresponding original values.
@@ -43,7 +46,9 @@ These contracts are the authoritative specification for all components in SafeSh
 ## 2. Storage & Vault
 
 ### Storage API (`SafeShield.storage`)
+
 Asynchronous layer over `chrome.storage.local` with an automatic in-memory fallback for Node environments:
+
 - `getEnabled() -> Promise<boolean>` (default: `true`)
 - `setEnabled(bool) -> Promise<void>`
 - `getStats() -> Promise<{ [type]: number }>` (default: `{}`)
@@ -52,7 +57,9 @@ Asynchronous layer over `chrome.storage.local` with an automatic in-memory fallb
 - `onChange(callback) -> () => void` (unsubscribes; callback receives `{ key, newValue, oldValue }`, fires only for `enabled` and `stats`)
 
 ### Vault API (`SafeShield.vault`)
+
 Ephemeral, in-memory placeholder mapping living in content-script memory only (never written to storage or disk, cleared on `pagehide`):
+
 - `remember(entities)`: merges an array of `{ placeholder, type, original }` into the in-memory map.
 - `all()`: returns a copy of current remembered entities.
 - `clear()`: clears the in-memory map.
@@ -62,6 +69,7 @@ Ephemeral, in-memory placeholder mapping living in content-script memory only (n
 ## 3. Modal & UI Overlay
 
 ### Modal API (`src/ui/overlay/preview-modal.js`, attached to `SafeShield.modal`)
+
 - `show({ originalText, redactedText, entities, counts }) -> Promise<{ action: 'send' | 'restore' | 'cancel' }>`
   - Rendered inside a Shadow DOM so the host page styles cannot tamper with it.
   - Shows entity type, placeholder, and masked value (first 2 and last 2 characters only, rest masked with `*`).
@@ -79,6 +87,7 @@ Ephemeral, in-memory placeholder mapping living in content-script memory only (n
 ## 4. Platform Status & Message Passing
 
 ### Status Request (`SS_GET_STATUS`)
+
 - Content script listens for `chrome.runtime.onMessage` with `{ type: 'SS_GET_STATUS' }`.
 - Responds with `{ state: 'active' | 'off' | 'unsupported' | 'error' }`.
 - **Honest status guarantee**:

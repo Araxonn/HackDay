@@ -199,10 +199,18 @@ body {
   transition: width 0.4s ease-out;
 }
 
-.bar-phone { background-color: #3b82f6; }
-.bar-email { background-color: #10b981; }
-.bar-aadhaar { background-color: #8b5cf6; }
-.bar-pan { background-color: #f59e0b; }
+.bar-phone {
+  background-color: #3b82f6;
+}
+.bar-email {
+  background-color: #10b981;
+}
+.bar-aadhaar {
+  background-color: #8b5cf6;
+}
+.bar-pan {
+  background-color: #f59e0b;
+}
 
 /* Privacy Box */
 .privacy-box {

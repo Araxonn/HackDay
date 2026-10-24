@@ -25,8 +25,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   ];
 
   function matches(url) {
-    const loc = url || (typeof window !== 'undefined' ? window.location.href : '');
-    return /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:chatgpt\.com|openai\.com)(?::\d+)?(?:\/|$)/i.test(loc);
+    const loc =
+      url || (typeof window !== 'undefined' ? window.location.href : '');
+    return /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:chatgpt\.com|openai\.com)(?::\d+)?(?:\/|$)/i.test(
+      loc,
+    );
   }
 
   function findComposer(doc) {

@@ -43,14 +43,16 @@
   **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.
 
 ## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff
+
 **Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.
 **What changed:**
+
 - Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.
 - Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.
 - Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.
-**Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)
-**Status:** done
-**Tasks:** none
-**Decisions:** none
-**Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.
-**Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.
+  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)
+  **Status:** done
+  **Tasks:** none
+  **Decisions:** none
+  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.
+  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.

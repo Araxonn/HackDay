@@ -15,7 +15,10 @@ class FakeElement {
   }
 
   getAttribute(name) {
-    return this.attributes.get(name) || (name === 'contenteditable' && this.isContentEditable ? 'true' : null);
+    return (
+      this.attributes.get(name) ||
+      (name === 'contenteditable' && this.isContentEditable ? 'true' : null)
+    );
   }
 
   setAttribute(name, val) {
@@ -168,9 +171,20 @@ test('setText returns false: submit is never called, modal.warn is called', asyn
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
   assert.equal(enterEvt.defaultPrevented, true, 'Event must be blocked');
-  assert.equal(submitCalled, false, 'submit must NEVER be called when setText fails');
-  assert.equal(modalShown, false, 'modal.show must NOT be called when setText fails');
-  assert.ok(warnMsg && warnMsg.includes('Send blocked'), 'modal.warn must be called with a send blocked message');
+  assert.equal(
+    submitCalled,
+    false,
+    'submit must NEVER be called when setText fails',
+  );
+  assert.equal(
+    modalShown,
+    false,
+    'modal.show must NOT be called when setText fails',
+  );
+  assert.ok(
+    warnMsg && warnMsg.includes('Send blocked'),
+    'modal.warn must be called with a send blocked message',
+  );
 });
 
 test('setText returns true but getText still returns the original text: submit is never called', async () => {
@@ -209,9 +223,20 @@ test('setText returns true but getText still returns the original text: submit i
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
   assert.equal(enterEvt.defaultPrevented, true, 'Event must be blocked');
-  assert.equal(submitCalled, false, 'submit must NEVER be called when composer does not match redactedText');
-  assert.equal(modalShown, false, 'modal.show must NOT be called when text mismatch occurs');
-  assert.ok(warnMsg && warnMsg.includes('Send blocked'), 'modal.warn must be called with a send blocked message');
+  assert.equal(
+    submitCalled,
+    false,
+    'submit must NEVER be called when composer does not match redactedText',
+  );
+  assert.equal(
+    modalShown,
+    false,
+    'modal.show must NOT be called when text mismatch occurs',
+  );
+  assert.ok(
+    warnMsg && warnMsg.includes('Send blocked'),
+    'modal.warn must be called with a send blocked message',
+  );
 });
 
 test('User edits the composer to add a fake PII value while the modal is open, then clicks Send redacted: submit is never called', async () => {
@@ -245,8 +270,15 @@ test('User edits the composer to add a fake PII value while the modal is open, t
   const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
-  assert.equal(submitCalled, false, 'submit must NEVER be called when PII is detected before submit');
-  assert.ok(warnMsg && warnMsg.includes('Send blocked'), 'modal.warn must be called when safety check fails');
+  assert.equal(
+    submitCalled,
+    false,
+    'submit must NEVER be called when PII is detected before submit',
+  );
+  assert.ok(
+    warnMsg && warnMsg.includes('Send blocked'),
+    'modal.warn must be called when safety check fails',
+  );
 });
 
 test('Normal happy path still submits only the redacted text', async () => {
@@ -290,9 +322,21 @@ test('Normal happy path still submits only the redacted text', async () => {
   await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
 
   assert.equal(modalShown, true, 'modal.show must be called on happy path');
-  assert.equal(submitCalled, true, 'composer.submit must be called on happy path');
-  assert.equal(submittedText, 'Call [PHONE_1] please', 'Submitted text must be redacted');
-  assert.equal(submittedText.includes('9876543210'), false, 'Raw phone must not be submitted');
+  assert.equal(
+    submitCalled,
+    true,
+    'composer.submit must be called on happy path',
+  );
+  assert.equal(
+    submittedText,
+    'Call [PHONE_1] please',
+    'Submitted text must be redacted',
+  );
+  assert.equal(
+    submittedText.includes('9876543210'),
+    false,
+    'Raw phone must not be submitted',
+  );
   assert.ok(rememberedEntities && rememberedEntities.length === 1);
   assert.deepEqual(recordedCounts, { PHONE: 1 });
 });

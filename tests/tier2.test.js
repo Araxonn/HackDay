@@ -18,7 +18,8 @@ test('Tier 2: IFSC code detection', () => {
 });
 
 test('Tier 2: UPI ID detection vs Email distinction', () => {
-  const text = 'Pay via UPI rohit@okhdfcbank or merchant@paytm. Email us at support@example.com.';
+  const text =
+    'Pay via UPI rohit@okhdfcbank or merchant@paytm. Email us at support@example.com.';
   const matches = detector.detect(text);
   assert.equal(matches.length, 3);
   assert.equal(matches[0].type, 'UPI');

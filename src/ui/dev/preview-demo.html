@@ -1,119 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafeShield UI Dev Harness</title>
-  <link rel="stylesheet" href="../shared.css">
-  <style>
-    body {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
-      line-height: 1.6;
-    }
-    .demo-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-    }
-    button.demo-btn {
-      background: var(--color-accent);
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button.demo-btn:hover {
-      background: var(--color-accent-hover);
-    }
-    button.warn-btn {
-      background: var(--color-status-error);
-    }
-    button.warn-btn:hover {
-      background: #dc2626;
-    }
-    .result-box {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      font-family: monospace;
-      font-size: 13px;
-    }
-  </style>
-</head>
-<body>
-  <h1>SafeShield UI Development Harness</h1>
-  <p>Test the detection preview modal and warning banner in isolation without needing ChatGPT open.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeShield UI Dev Harness</title>
+    <link rel="stylesheet" href="../shared.css" />
+    <style>
+      body {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        line-height: 1.6;
+      }
+      .demo-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      button.demo-btn {
+        background: var(--color-accent);
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button.demo-btn:hover {
+        background: var(--color-accent-hover);
+      }
+      button.warn-btn {
+        background: var(--color-status-error);
+      }
+      button.warn-btn:hover {
+        background: #dc2626;
+      }
+      .result-box {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        font-family: monospace;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SafeShield UI Development Harness</h1>
+    <p>
+      Test the detection preview modal and warning banner in isolation without
+      needing ChatGPT open.
+    </p>
 
-  <div class="demo-card">
-    <h2>Preview Modal Demos</h2>
-    <p>Simulates the exact modal shown when personal data is intercepted before prompt submission.</p>
+    <div class="demo-card">
+      <h2>Preview Modal Demos</h2>
+      <p>
+        Simulates the exact modal shown when personal data is intercepted before
+        prompt submission.
+      </p>
 
-    <div class="btn-group">
-      <button class="demo-btn" id="btn-full-modal">Show Modal (4 PII Types)</button>
-      <button class="demo-btn" id="btn-phone-modal">Show Modal (Phone & Email)</button>
-      <button class="demo-btn warn-btn" id="btn-warn-banner">Trigger Warning Banner</button>
+      <div class="btn-group">
+        <button class="demo-btn" id="btn-full-modal">
+          Show Modal (4 PII Types)
+        </button>
+        <button class="demo-btn" id="btn-phone-modal">
+          Show Modal (Phone & Email)
+        </button>
+        <button class="demo-btn warn-btn" id="btn-warn-banner">
+          Trigger Warning Banner
+        </button>
+      </div>
+
+      <div class="result-box" id="result-box">
+        Modal resolution will appear here after clicking an action.
+      </div>
     </div>
 
-    <div class="result-box" id="result-box">
-      Modal resolution will appear here after clicking an action.
-    </div>
-  </div>
+    <script src="../../shared/constants.js"></script>
+    <script src="../../core/validators.js"></script>
+    <script src="../overlay/preview-modal.js"></script>
+    <script>
+      const resultBox = document.getElementById('result-box');
 
-  <script src="../../shared/constants.js"></script>
-  <script src="../../core/validators.js"></script>
-  <script src="../overlay/preview-modal.js"></script>
-  <script>
-    const resultBox = document.getElementById('result-box');
+      document
+        .getElementById('btn-full-modal')
+        .addEventListener('click', async () => {
+          resultBox.textContent = 'Modal opened. Waiting for user action...';
+          const response = await SafeShield.modal.show({
+            originalText:
+              'Please review my resume: name Raj, email raj.kumar@example.com, phone +91 98765 43210, PAN ABCPA1234Z, and Aadhaar 2345 6789 0124.',
+            redactedText:
+              'Please review my resume: name Raj, email [EMAIL_1], phone [PHONE_1], PAN [PAN_1], and Aadhaar [AADHAAR_1].',
+            entities: [
+              {
+                placeholder: '[EMAIL_1]',
+                type: 'EMAIL',
+                original: 'raj.kumar@example.com',
+              },
+              {
+                placeholder: '[PHONE_1]',
+                type: 'PHONE',
+                original: '+91 98765 43210',
+              },
+              { placeholder: '[PAN_1]', type: 'PAN', original: 'ABCPA1234Z' },
+              {
+                placeholder: '[AADHAAR_1]',
+                type: 'AADHAAR',
+                original: '2345 6789 0124',
+              },
+            ],
+            counts: { EMAIL: 1, PHONE: 1, PAN: 1, AADHAAR: 1 },
+          });
+          resultBox.textContent = `Modal resolved with action: "${response.action}"`;
+        });
 
-    document.getElementById('btn-full-modal').addEventListener('click', async () => {
-      resultBox.textContent = 'Modal opened. Waiting for user action...';
-      const response = await SafeShield.modal.show({
-        originalText: 'Please review my resume: name Raj, email raj.kumar@example.com, phone +91 98765 43210, PAN ABCPA1234Z, and Aadhaar 2345 6789 0124.',
-        redactedText: 'Please review my resume: name Raj, email [EMAIL_1], phone [PHONE_1], PAN [PAN_1], and Aadhaar [AADHAAR_1].',
-        entities: [
-          { placeholder: '[EMAIL_1]', type: 'EMAIL', original: 'raj.kumar@example.com' },
-          { placeholder: '[PHONE_1]', type: 'PHONE', original: '+91 98765 43210' },
-          { placeholder: '[PAN_1]', type: 'PAN', original: 'ABCPA1234Z' },
-          { placeholder: '[AADHAAR_1]', type: 'AADHAAR', original: '2345 6789 0124' }
-        ],
-        counts: { EMAIL: 1, PHONE: 1, PAN: 1, AADHAAR: 1 }
-      });
-      resultBox.textContent = `Modal resolved with action: "${response.action}"`;
-    });
+      document
+        .getElementById('btn-phone-modal')
+        .addEventListener('click', async () => {
+          resultBox.textContent = 'Modal opened. Waiting for user action...';
+          const response = await SafeShield.modal.show({
+            originalText:
+              'Mera phone 9876543210 hai and email priya@example.in hai.',
+            redactedText: 'Mera phone [PHONE_1] hai and email [EMAIL_1] hai.',
+            entities: [
+              {
+                placeholder: '[PHONE_1]',
+                type: 'PHONE',
+                original: '9876543210',
+              },
+              {
+                placeholder: '[EMAIL_1]',
+                type: 'EMAIL',
+                original: 'priya@example.in',
+              },
+            ],
+            counts: { PHONE: 1, EMAIL: 1 },
+          });
+          resultBox.textContent = `Modal resolved with action: "${response.action}"`;
+        });
 
-    document.getElementById('btn-phone-modal').addEventListener('click', async () => {
-      resultBox.textContent = 'Modal opened. Waiting for user action...';
-      const response = await SafeShield.modal.show({
-        originalText: 'Mera phone 9876543210 hai and email priya@example.in hai.',
-        redactedText: 'Mera phone [PHONE_1] hai and email [EMAIL_1] hai.',
-        entities: [
-          { placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' },
-          { placeholder: '[EMAIL_1]', type: 'EMAIL', original: 'priya@example.in' }
-        ],
-        counts: { PHONE: 1, EMAIL: 1 }
-      });
-      resultBox.textContent = `Modal resolved with action: "${response.action}"`;
-    });
-
-    document.getElementById('btn-warn-banner').addEventListener('click', () => {
-      SafeShield.modal.warn('Send blocked: protection could not run safely.');
-      resultBox.textContent = 'Warning banner triggered (disappears in 6 seconds).';
-    });
-  </script>
-</body>
+      document
+        .getElementById('btn-warn-banner')
+        .addEventListener('click', () => {
+          SafeShield.modal.warn(
+            'Send blocked: protection could not run safely.',
+          );
+          resultBox.textContent =
+            'Warning banner triggered (disappears in 6 seconds).';
+        });
+    </script>
+  </body>
 </html>

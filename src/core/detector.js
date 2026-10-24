@@ -56,7 +56,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       let match;
       while ((match = regex.exec(normalized)) !== null) {
         const matchedText = match[0];
-        if (validators.isValidAadhaar && validators.isValidAadhaar(matchedText)) {
+        if (
+          validators.isValidAadhaar &&
+          validators.isValidAadhaar(matchedText)
+        ) {
           candidates.push({
             type: PII_TYPES.AADHAAR,
             start: match.index,
@@ -161,7 +164,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     // Tier 2: Voter ID (Priority 5)
     if (patterns.VOTER_ID) {
-      const regex = new RegExp(patterns.VOTER_ID.source, patterns.VOTER_ID.flags);
+      const regex = new RegExp(
+        patterns.VOTER_ID.source,
+        patterns.VOTER_ID.flags,
+      );
       let match;
       while ((match = regex.exec(text)) !== null) {
         candidates.push({
@@ -175,7 +181,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     // Tier 2: Passport (Priority 5)
     if (patterns.PASSPORT) {
-      const regex = new RegExp(patterns.PASSPORT.source, patterns.PASSPORT.flags);
+      const regex = new RegExp(
+        patterns.PASSPORT.source,
+        patterns.PASSPORT.flags,
+      );
       let match;
       while ((match = regex.exec(text)) !== null) {
         candidates.push({
@@ -224,13 +233,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     const survives = candidates.filter((cand) => {
       for (const other of candidates) {
         if (cand === other) continue;
-        const overlaps = Math.max(cand.start, other.start) < Math.min(cand.end, other.end);
+        const overlaps =
+          Math.max(cand.start, other.start) < Math.min(cand.end, other.end);
         if (overlaps) {
           // Special rule: Valid Aadhaar always beats Phone
-          if (cand.type === PII_TYPES.PHONE && other.type === PII_TYPES.AADHAAR) {
+          if (
+            cand.type === PII_TYPES.PHONE &&
+            other.type === PII_TYPES.AADHAAR
+          ) {
             return false;
           }
-          if (cand.type === PII_TYPES.AADHAAR && other.type === PII_TYPES.PHONE) {
+          if (
+            cand.type === PII_TYPES.AADHAAR &&
+            other.type === PII_TYPES.PHONE
+          ) {
             continue;
           }
           // Priority check
@@ -249,7 +265,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     });
 
     // Sort by start ascending
-    survives.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+    survives.sort(
+      (a, b) => a.start - b.start || b.end - b.start - (a.end - a.start),
+    );
 
     // Ensure non-overlapping in sequential order
     const results = [];

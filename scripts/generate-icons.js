@@ -7,15 +7,15 @@ function crc32(buf) {
   for (let i = 0; i < 256; i++) {
     let c = i;
     for (let k = 0; k < 8; k++) {
-      c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     }
     table[i] = c;
   }
-  let crc = 0 ^ (-1);
+  let crc = 0 ^ -1;
   for (let i = 0; i < buf.length; i++) {
     crc = (crc >>> 8) ^ table[(crc ^ buf[i]) & 0xff];
   }
-  return (crc ^ (-1)) >>> 0;
+  return (crc ^ -1) >>> 0;
 }
 
 function makeChunk(type, data) {
@@ -44,16 +44,25 @@ function generateShieldPng(size) {
 
       // Shield boundary
       const inShieldTop = ny >= -0.85 && ny <= 0.05 && Math.abs(nx) <= 0.78;
-      const inShieldBottom = ny > 0.05 && ny <= 0.9 && Math.abs(nx) <= (0.78 * (1 - Math.pow((ny - 0.05) / 0.85, 1.4)));
-      const inShield = (inShieldTop || inShieldBottom) && !(ny < -0.7 && Math.abs(nx) > 0.65);
+      const inShieldBottom =
+        ny > 0.05 &&
+        ny <= 0.9 &&
+        Math.abs(nx) <= 0.78 * (1 - Math.pow((ny - 0.05) / 0.85, 1.4));
+      const inShield =
+        (inShieldTop || inShieldBottom) && !(ny < -0.7 && Math.abs(nx) > 0.65);
 
       // Inner shield
       const inInnerTop = ny >= -0.72 && ny <= 0.02 && Math.abs(nx) <= 0.62;
-      const inInnerBottom = ny > 0.02 && ny <= 0.78 && Math.abs(nx) <= (0.62 * (1 - Math.pow((ny - 0.02) / 0.76, 1.4)));
+      const inInnerBottom =
+        ny > 0.02 &&
+        ny <= 0.78 &&
+        Math.abs(nx) <= 0.62 * (1 - Math.pow((ny - 0.02) / 0.76, 1.4));
       const inInner = inInnerTop || inInnerBottom;
 
       // Emblem (keyhole / lock / star center)
-      const isCore = Math.hypot(nx, ny - (-0.18)) <= 0.22 || (Math.abs(nx) <= 0.12 && ny >= -0.18 && ny <= 0.35);
+      const isCore =
+        Math.hypot(nx, ny - -0.18) <= 0.22 ||
+        (Math.abs(nx) <= 0.12 && ny >= -0.18 && ny <= 0.35);
 
       if (inInner) {
         if (isCore) {
@@ -108,7 +117,13 @@ function generateShieldPng(size) {
 
 [16, 48, 128].forEach((size) => {
   const buf = generateShieldPng(size);
-  const target = path.join(__dirname, '..', 'assets', 'icons', `icon${size}.png`);
+  const target = path.join(
+    __dirname,
+    '..',
+    'assets',
+    'icons',
+    `icon${size}.png`,
+  );
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, buf);
   console.log(`Generated icon${size}.png (${buf.length} bytes)`);

@@ -23,11 +23,12 @@ SafeShield is designed from first principles with a **fail-closed, local-first**
    - The active tab matches a supported platform (`chatgpt.com` / `chat.openai.com`), **AND**
    - The prompt composer is discovered in the DOM, **AND**
    - Interception capture hooks are actively attached.
-   Otherwise, it displays **Off**, **Not supported on this page**, or **Error**.
+     Otherwise, it displays **Off**, **Not supported on this page**, or **Error**.
 4. **Anonymized Count Storage Only**: SafeShield never writes prompt text, detected sensitive values, or entity mappings to `chrome.storage`, the console, or any background message. Only aggregate counts per PII type (e.g. `{ PHONE: 3, EMAIL: 1 }`) are stored.
 5. **Ephemeral In-Memory Vault**: The placeholder-to-original mapping lives in content script memory only and is automatically purged on `pagehide` (navigation or tab close).
 
 ### What SafeShield Protects
+
 - Indian mobile numbers (10 digits starting 6–9, with optional `+91`, `91`, or `0` prefix, with spaces or hyphens).
 - Email addresses.
 - 12-digit Indian Aadhaar numbers passing the Verhoeff checksum algorithm.
@@ -38,6 +39,7 @@ SafeShield is designed from first principles with a **fail-closed, local-first**
 - (Optional Tier 3) Local Gemma Assist for unstructured human names and physical addresses.
 
 ### What SafeShield Does NOT Protect (Limitations)
+
 - **Pattern-based detection**: Detection is heuristic and regular-expression based. Malformed numbers, unusual separators, or unstructured descriptions of personal data may be missed.
 - **Hosted Cloud AI is intentionally blocked**: SafeShield NEVER talks to external hosted LLMs (no OpenAI, no Google Gemini API, no hosted Gemma API). Only local loopback Ollama is supported.
 - **Platform scope**: The prototype currently targets ChatGPT web interfaces. Other AI platforms (Claude, Gemini, Copilot) are not intercepted by default.
@@ -48,15 +50,16 @@ SafeShield is designed from first principles with a **fail-closed, local-first**
 
 SafeShield includes an **optional, disabled-by-default** local AI feature for detecting unstructured personal names and physical street addresses using a local Ollama instance running Gemma.
 
-> **Privacy Rule**: The local AI assist talks ONLY to your local loopback (`http://localhost:11434` or `http://127.0.0.1:11434`). Hosted cloud APIs are deliberately not supported. Structured PII is always regex-redacted *before* passing through local Gemma. If the model is offline or uninstalled, SafeShield falls back gracefully to regex pattern detection without blocking prompt submission.
+> **Privacy Rule**: The local AI assist talks ONLY to your local loopback (`http://localhost:11434` or `http://127.0.0.1:11434`). Hosted cloud APIs are deliberately not supported. Structured PII is always regex-redacted _before_ passing through local Gemma. If the model is offline or uninstalled, SafeShield falls back gracefully to regex pattern detection without blocking prompt submission.
 
 ### Setup Steps for Local Ollama:
+
 1. Install [Ollama](https://ollama.com).
 2. Pull the lightweight Gemma model:
    ```bash
    ollama pull gemma4:e2b
    ```
-   *(Note: Check your exact installed model tag with `ollama list` and adjust in code if you use a different tag).*
+   _(Note: Check your exact installed model tag with `ollama list` and adjust in code if you use a different tag)._
 3. On Windows, allow Chrome extension access to loopback Ollama:
    ```powershell
    setx OLLAMA_ORIGINS "chrome-extension://*"
@@ -83,21 +86,28 @@ No build tools or bundlers are needed. Plain JavaScript runs directly in Chrome.
 ## How to Test
 
 ### 1. Automated Unit Tests (Node >= 20)
+
 Run the full automated test suite with Node's built-in test runner:
+
 ```bash
 npm test
 ```
+
 To run code formatting and linting:
+
 ```bash
 npm run lint
 ```
 
 ### 2. Standalone UI Dev Harness (No ChatGPT needed)
+
 You can test the preview modal, focus trapping, and warning banners in your browser without opening ChatGPT:
+
 - In Chrome, open `file:///c:/Users/lucky/OneDrive/Desktop/SafeShield/src/ui/dev/preview-demo.html`
 - Click buttons to trigger modals and test the `Send`, `Restore`, and `Cancel` flows.
 
 ### 3. End-to-End Testing on ChatGPT
+
 Follow the detailed 5-step script in [`docs/demo-script.md`](docs/demo-script.md) using the verified fake test prompts in [`docs/test-prompts.md`](docs/test-prompts.md).
 
 ---
@@ -110,7 +120,9 @@ If ChatGPT updates its DOM layout, verify or update the selectors in `src/conten
 2. Switch to the **Console** tab.
 3. Test composer discovery:
    ```javascript
-   const composer = document.querySelector('#prompt-textarea') || document.querySelector('div[contenteditable="true"]');
+   const composer =
+     document.querySelector('#prompt-textarea') ||
+     document.querySelector('div[contenteditable="true"]');
    console.log('Composer found:', composer);
    ```
 4. Test reading text from composer:
@@ -119,7 +131,9 @@ If ChatGPT updates its DOM layout, verify or update the selectors in `src/conten
    ```
 5. Test send button discovery:
    ```javascript
-   const sendBtn = document.querySelector('button[data-testid="send-button"]') || document.querySelector('button[aria-label="Send prompt"]');
+   const sendBtn =
+     document.querySelector('button[data-testid="send-button"]') ||
+     document.querySelector('button[aria-label="Send prompt"]');
    console.log('Send button found:', sendBtn);
    ```
 6. Check extension status from popup:

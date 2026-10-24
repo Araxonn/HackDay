@@ -33,7 +33,11 @@ test('redactor assigns stable placeholders and accurate counts', () => {
   assert.equal(phoneEnt.original, '9876543210');
 
   // Same value got same placeholder in text
-  assert.ok(result.redactedText.includes('Contact [EMAIL_1] or [PHONE_1]. Repeat [EMAIL_1] and call [PHONE_1] again.'));
+  assert.ok(
+    result.redactedText.includes(
+      'Contact [EMAIL_1] or [PHONE_1]. Repeat [EMAIL_1] and call [PHONE_1] again.',
+    ),
+  );
   assert.ok(result.redactedText.includes('Aadhaar: [AADHAAR_1].'));
 });
 
@@ -65,13 +69,25 @@ test('restore round trip guarantee: restore(redact(x).redactedText, entities) ==
   for (const originalPrompt of prompts) {
     const { redactedText, entities } = redactor.redact(originalPrompt);
     const restored = redactor.restore(redactedText, entities);
-    assert.equal(restored, originalPrompt, `Failed round trip for: "${originalPrompt}"`);
+    assert.equal(
+      restored,
+      originalPrompt,
+      `Failed round trip for: "${originalPrompt}"`,
+    );
   }
 });
 
 test('redactor handles edge cases: empty string, falsy, no matches', () => {
-  assert.deepEqual(redactor.redact(''), { redactedText: '', entities: [], counts: {} });
-  assert.deepEqual(redactor.redact(null), { redactedText: '', entities: [], counts: {} });
+  assert.deepEqual(redactor.redact(''), {
+    redactedText: '',
+    entities: [],
+    counts: {},
+  });
+  assert.deepEqual(redactor.redact(null), {
+    redactedText: '',
+    entities: [],
+    counts: {},
+  });
   assert.equal(redactor.restore('', []), '');
   assert.equal(redactor.restore('plain text', []), 'plain text');
 });

@@ -29,8 +29,16 @@ test('storage setEnabled and onChange', async () => {
 
   // Should have recorded exactly two events before unsubscribe
   assert.equal(events.length, 2);
-  assert.deepEqual(events[0], { key: 'enabled', newValue: false, oldValue: true });
-  assert.deepEqual(events[1], { key: 'enabled', newValue: true, oldValue: false });
+  assert.deepEqual(events[0], {
+    key: 'enabled',
+    newValue: false,
+    oldValue: true,
+  });
+  assert.deepEqual(events[1], {
+    key: 'enabled',
+    newValue: true,
+    oldValue: false,
+  });
 
   // Reset back to true for other tests
   await storage.setEnabled(true);

@@ -28,7 +28,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   }
 
   // Clear on page navigation or tab close
-  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.addEventListener === 'function'
+  ) {
     window.addEventListener('pagehide', () => {
       clear();
     });

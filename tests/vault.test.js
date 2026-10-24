@@ -18,7 +18,9 @@ test('vault remember, all, and clear', () => {
   assert.deepEqual(vault.all(), entities);
 
   // Updating or adding existing placeholder
-  vault.remember([{ placeholder: '[PHONE_1]', type: 'PHONE', original: '+91 98765 43210' }]);
+  vault.remember([
+    { placeholder: '[PHONE_1]', type: 'PHONE', original: '+91 98765 43210' },
+  ]);
   assert.equal(vault.all().length, 2);
 
   vault.clear();

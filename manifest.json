@@ -3,13 +3,8 @@
   "name": "SafeShield",
   "version": "1.0.0",
   "description": "Local-first privacy protector that redacts sensitive personal data before sending prompts to AI chat sites.",
-  "permissions": [
-    "storage"
-  ],
-  "host_permissions": [
-    "http://localhost:11434/*",
-    "http://127.0.0.1:11434/*"
-  ],
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:11434/*", "http://127.0.0.1:11434/*"],
   "icons": {
     "16": "assets/icons/icon16.png",
     "48": "assets/icons/icon48.png",
@@ -29,13 +24,8 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://chatgpt.com/*",
-        "https://chat.openai.com/*"
-      ],
-      "css": [
-        "src/ui/overlay/preview-modal.css"
-      ],
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "css": ["src/ui/overlay/preview-modal.css"],
       "js": [
         "src/shared/constants.js",
         "src/shared/storage.js",

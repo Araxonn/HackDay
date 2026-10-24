@@ -79,9 +79,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     // Optional Local Gemma Assist (only if explicitly enabled by user)
     try {
-      const isAiEnabled = storage && typeof storage.getAiAssist === 'function'
-        ? await storage.getAiAssist()
-        : false;
+      const isAiEnabled =
+        storage && typeof storage.getAiAssist === 'function'
+          ? await storage.getAiAssist()
+          : false;
 
       const words = redactedText.trim().split(/\s+/).filter(Boolean);
       // Skip if under 3 words or if structured PII is still detected
@@ -89,7 +90,13 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         ? SafeShield.detector.detect(redactedText).length > 0
         : false;
 
-      if (isAiEnabled && words.length >= 3 && !hasRemainingStructuredPII && typeof chrome !== 'undefined' && chrome.runtime) {
+      if (
+        isAiEnabled &&
+        words.length >= 3 &&
+        !hasRemainingStructuredPII &&
+        typeof chrome !== 'undefined' &&
+        chrome.runtime
+      ) {
         const aiRes = await new Promise((resolve) => {
           chrome.runtime.sendMessage(
             { type: 'SS_AI_CLASSIFY', text: redactedText },
@@ -99,11 +106,16 @@ globalThis.SafeShield = globalThis.SafeShield || {};
               } else {
                 resolve(resp);
               }
-            }
+            },
           );
         });
 
-        if (aiRes && aiRes.ok && Array.isArray(aiRes.spans) && aiRes.spans.length > 0) {
+        if (
+          aiRes &&
+          aiRes.ok &&
+          Array.isArray(aiRes.spans) &&
+          aiRes.spans.length > 0
+        ) {
           let nameIndex = 0;
           let addrIndex = 0;
           for (const span of aiRes.spans) {
@@ -150,7 +162,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     try {
       // Write redacted text into the composer
-      const setTextOk = composer ? composer.setText(composerEl, redactedText) : false;
+      const setTextOk = composer
+        ? composer.setText(composerEl, redactedText)
+        : false;
       const currentText = composer ? composer.getText(composerEl) : '';
       if (!setTextOk || currentText !== redactedText) {
         if (modal && typeof modal.warn === 'function') {
@@ -261,11 +275,18 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     composerEl.addEventListener(
       'keydown',
       (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing) {
+        if (
+          e.key === 'Enter' &&
+          !e.shiftKey &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.altKey &&
+          !e.isComposing
+        ) {
           handleSubmission(e, composerEl, adapter);
         }
       },
-      true // Capture phase
+      true, // Capture phase
     );
 
     // Capture-phase paste listener with proactive warning banner
@@ -274,12 +295,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       (e) => {
         if (!isEnabled || isBypassing) return;
         try {
-          const clipboardText = e.clipboardData ? e.clipboardData.getData('text') : '';
+          const clipboardText = e.clipboardData
+            ? e.clipboardData.getData('text')
+            : '';
           if (clipboardText && SafeShield.detector) {
             const matches = SafeShield.detector.detect(clipboardText);
             if (matches && matches.length > 0 && SafeShield.modal) {
               SafeShield.modal.warn(
-                `Sensitive data (${matches.map((m) => m.type).join(', ')}) detected in paste. SafeShield will redact before sending.`
+                `Sensitive data (${matches.map((m) => m.type).join(', ')}) detected in paste. SafeShield will redact before sending.`,
               );
             }
           }
@@ -287,7 +310,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           console.error('SafeShield paste check error:', pasteErr);
         }
       },
-      true
+      true,
     );
 
     // Capture-phase click listener on document for any send button clicks
@@ -299,7 +322,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           handleSubmission(e, composerEl, adapter);
         }
       },
-      true // Capture phase
+      true, // Capture phase
     );
   }
 
@@ -307,8 +330,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     attachHooks,
     handleSubmission,
     getIsEnabled: () => isEnabled,
-    setIsEnabled: (v) => { isEnabled = Boolean(v); },
-    getIsAttached: () => Boolean(attachedComposer && attachedComposer.isConnected),
+    setIsEnabled: (v) => {
+      isEnabled = Boolean(v);
+    },
+    getIsAttached: () =>
+      Boolean(attachedComposer && attachedComposer.isConnected),
   };
 
   SafeShield.interceptor = interceptor;

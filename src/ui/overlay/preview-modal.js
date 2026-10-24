@@ -91,7 +91,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       backdrop.setAttribute('aria-labelledby', 'ss-modal-title');
 
       const totalItems = Object.values(counts || {}).reduce((a, b) => a + b, 0);
-      const noteBanner = note ? `<div class="ss-banner" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.3); margin-bottom: 8px;">ℹ️ ${note}</div>` : '';
+      const noteBanner = note
+        ? `<div class="ss-banner" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.3); margin-bottom: 8px;">ℹ️ ${note}</div>`
+        : '';
 
       const entityRows = (entities || [])
         .map(
@@ -103,7 +105,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
             </div>
             <span class="ss-masked-val" title="Masked preview">${maskValue(e.original)}</span>
           </div>
-        `
+        `,
         )
         .join('');
 
@@ -180,7 +182,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           const first = focusable[0];
           const last = focusable[focusable.length - 1];
           if (e.shiftKey) {
-            if (shadowRoot.activeElement === first || document.activeElement === hostEl) {
+            if (
+              shadowRoot.activeElement === first ||
+              document.activeElement === hostEl
+            ) {
               e.preventDefault();
               last.focus();
             }

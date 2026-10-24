@@ -51,7 +51,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       const key = `${m.type}::${m.value}`;
       if (!valueMap.has(key)) {
         typeCounters[m.type] = (typeCounters[m.type] || 0) + 1;
-        const placeholder = constants.makePlaceholder(m.type, typeCounters[m.type]);
+        const placeholder = constants.makePlaceholder(
+          m.type,
+          typeCounters[m.type],
+        );
         valueMap.set(key, {
           placeholder,
           type: m.type,

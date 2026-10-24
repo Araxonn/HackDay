@@ -10,7 +10,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     }
     if (el.isContentEditable || el.getAttribute('contenteditable') === 'true') {
       // innerText preserves natural linebreaks in ProseMirror paragraphs
-      return el.innerText !== undefined ? el.innerText : (el.textContent || '');
+      return el.innerText !== undefined ? el.innerText : el.textContent || '';
     }
     return el.value || el.textContent || '';
   }
@@ -27,14 +27,21 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       let inserted = false;
 
       // Primary strategy: document.execCommand('insertText') so ProseMirror / React state updates
-      if (typeof document !== 'undefined' && typeof document.execCommand === 'function') {
+      if (
+        typeof document !== 'undefined' &&
+        typeof document.execCommand === 'function'
+      ) {
         if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
           if (typeof el.select === 'function') {
             el.select();
           } else if (typeof el.setSelectionRange === 'function') {
             el.setSelectionRange(0, el.value.length);
           }
-        } else if (typeof window !== 'undefined' && window.getSelection && document.createRange) {
+        } else if (
+          typeof window !== 'undefined' &&
+          window.getSelection &&
+          document.createRange
+        ) {
           const range = document.createRange();
           range.selectNodeContents(el);
           const sel = window.getSelection();
@@ -66,7 +73,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
                 cancelable: true,
                 inputType: 'insertText',
                 data: text,
-              })
+              }),
             );
           } catch {
             el.dispatchEvent(new Event('input', { bubbles: true }));

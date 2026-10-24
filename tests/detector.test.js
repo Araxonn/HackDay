@@ -74,14 +74,20 @@ test('detector handles Hinglish sentences and Devanagari numerals', () => {
   assert.equal(matches2[0].type, 'PHONE');
   // Value must be sliced from the ORIGINAL text
   assert.equal(matches2[0].value, devanagariPhone);
-  assert.equal(textDevanagari.slice(matches2[0].start, matches2[0].end), devanagariPhone);
+  assert.equal(
+    textDevanagari.slice(matches2[0].start, matches2[0].end),
+    devanagariPhone,
+  );
 });
 
 test('detector handles empty and falsy input', () => {
   assert.deepEqual(detector.detect(''), []);
   assert.deepEqual(detector.detect(null), []);
   assert.deepEqual(detector.detect(undefined), []);
-  assert.deepEqual(detector.detect('Plain text without any personal data.'), []);
+  assert.deepEqual(
+    detector.detect('Plain text without any personal data.'),
+    [],
+  );
 });
 
 test('detector performance: 100k characters processed under 200ms', () => {
@@ -96,5 +102,8 @@ test('detector performance: 100k characters processed under 200ms', () => {
   const elapsed = performance.now() - start;
 
   assert.ok(matches.length > 0);
-  assert.ok(elapsed < 200, `Execution took ${elapsed.toFixed(2)}ms (expected < 200ms)`);
+  assert.ok(
+    elapsed < 200,
+    `Execution took ${elapsed.toFixed(2)}ms (expected < 200ms)`,
+  );
 });
