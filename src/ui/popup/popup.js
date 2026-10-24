@@ -12,10 +12,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statAadhaar = document.getElementById('stat-aadhaar');
   const statPan = document.getElementById('stat-pan');
   const dashboardBtn = document.getElementById('open-dashboard-btn');
+  const sendRedactedBtn = document.getElementById('send-redacted-btn');
+  const sendRedactedFeedback = document.getElementById('send-redacted-feedback');
 
   function setStatusUI(state, message) {
     statusCard.className = `status-card status-${state}`;
     statusText.textContent = message;
+    // Enable Send Redacted only when actively protecting a supported page
+    if (sendRedactedBtn) {
+      sendRedactedBtn.disabled = state !== 'active';
+    }
   }
 
   function renderStats(stats) {
@@ -141,5 +147,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.open('../dashboard/dashboard.html');
       }
     });
+  }
+
+  // Send Redacted button — triggers redaction flow in the content script
+  if (sendRedactedBtn) {
+    // Start disabled; setStatusUI will enable it once we know the page is active
+    sendRedactedBtn.disabled = true;
+
+    sendRedactedBtn.addEventListener('click', () => {
+      if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) return;
+
+      sendRedactedBtn.disabled = true;
+      showFeedback('', '');
+
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime.lastError || !tabs || tabs.length === 0) {
+          showFeedback('Could not reach the page.', 'error');
+          sendRedactedBtn.disabled = false;
+          return;
+        }
+        const tabId = tabs[0] && tabs[0].id;
+        if (!tabId) {
+          showFeedback('No active tab found.', 'error');
+          sendRedactedBtn.disabled = false;
+          return;
+        }
+
+        chrome.tabs.sendMessage(tabId, { type: 'SS_SEND_REDACTED' }, (response) => {
+          if (chrome.runtime.lastError) {
+            showFeedback('Extension not active on this page.', 'error');
+            sendRedactedBtn.disabled = false;
+            return;
+          }
+          if (response && response.ok) {
+            showFeedback('✓ Redaction triggered — review the preview.', 'success');
+          } else if (response && response.reason === 'no_pii') {
+            showFeedback('No PII detected — prompt sent as-is.', 'success');
+          } else if (response && response.reason === 'disabled') {
+            showFeedback('Protection is off.', 'error');
+          } else {
+            showFeedback(response && response.message ? response.message : 'Blocked — see page for details.', 'error');
+          }
+          sendRedactedBtn.disabled = false;
+        });
+      });
+    });
+  }
+
+  function showFeedback(msg, type) {
+    if (!sendRedactedFeedback) return;
+    sendRedactedFeedback.textContent = msg;
+    sendRedactedFeedback.className = 'send-redacted-feedback' + (type ? ` ${type}` : '');
   }
 });

@@ -56,3 +56,38 @@
   **Decisions:** none
   **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.
   **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.
+
+## M4-005 | 2026-10-25 03:43 | feat/solo-build
+**Prompt:** docs: add MIT license and complete open-source README
+**What changed:**
+- Added `LICENSE` file (MIT) with copyright line "Copyright (c) 2026 SafeShield Contributors".
+- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.
+**Files:** `LICENSE` (added), `README.md` (modified)
+**Status:** done
+**Tasks:** T1-16
+**Decisions:** none
+**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.
+**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.
+
+## M4-006 | 2026-10-25 04:52 | feat/solo-build
+**Prompt:** Publish all current changes together rather than splitting them by member.
+**What changed:**
+- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.
+- Ran the project test suite successfully before preparing the publication.
+**Files:** `docs/changelog/member-4.md` (modified)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.
+**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.
+
+## M4-006 | 2026-10-25 04:53 | feat/solo-build
+**Prompt:** Publishing combined feature branch changes
+**What changed:**
+- <summarize each change>
+**Files:** <path> (added|modified|deleted)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** none
+**Next:** <one concrete next step>

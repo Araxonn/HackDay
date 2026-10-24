@@ -6,14 +6,100 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 0 |
-| M2 | Platform integration | 2 |
-| M3 | UI/UX | 1 |
-| M4 | Foundation, data, and docs | 4 |
+| M1 | Detection engine | 1 |
+| M2 | Platform integration | 3 |
+| M3 | UI/UX | 2 |
+| M4 | Foundation, data, and docs | 7 |
 
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Foundation, data, and docs
+
+## M4-006 | 2026-10-25 04:53 | feat/solo-build
+**Prompt:** Publishing combined feature branch changes
+**What changed:**
+- <summarize each change>
+**Files:** <path> (added|modified|deleted)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** none
+**Next:** <one concrete next step>
+
+**Role:** Foundation, data, and docs
+
+## M4-006 | 2026-10-25 04:52 | feat/solo-build
+**Prompt:** Publish all current changes together rather than splitting them by member.
+**What changed:**
+- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.
+- Ran the project test suite successfully before preparing the publication.
+**Files:** `docs/changelog/member-4.md` (modified)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.
+**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.
+
+**Role:** Foundation, data, and docs
+
+## M4-005 | 2026-10-25 03:43 | feat/solo-build
+**Prompt:** docs: add MIT license and complete open-source README
+**What changed:**
+- Added `LICENSE` file (MIT) with copyright line "Copyright (c) 2026 SafeShield Contributors".
+- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.
+**Files:** `LICENSE` (added), `README.md` (modified)
+**Status:** done
+**Tasks:** T1-16
+**Decisions:** none
+**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.
+**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.
+
+**Role:** Detection engine
+
+## M1-001 | 2026-10-25 03:35 | feat/solo-build
+**Prompt:** fix: remove Verhoeff gate from Aadhaar detection
+**What changed:**
+- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.
+- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.
+- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.
+  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)
+  **Status:** done
+  **Tasks:** T1-03
+  **Decisions:** none
+  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.
+  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).
+
+**Role:** Platform integration
+
+## M2-003 | 2026-10-25 03:26 | feat/solo-build
+**Prompt:** fix: add SS_SEND_REDACTED handler in main.js
+**What changed:**
+- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.
+- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.
+  **Files:** `src/content/main.js` (modified)
+  **Status:** done
+  **Tasks:** none
+  **Decisions:** none
+  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.
+  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.
+
+**Role:** UI/UX
+
+## M3-002 | 2026-10-25 03:16 | feat/solo-build
+**Prompt:** feat: add Send Redacted button to popup
+**What changed:**
+- Added a "Send Redacted" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.
+- Added a .send-redacted-feedback div (aria-live="polite") below the button that shows inline success/error messages without blocking the UI.
+- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).
+- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).
+  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)
+  **Status:** done
+  **Tasks:** T1-11
+  **Decisions:** none
+  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.
+  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).
 
 **Role:** UI/UX
 

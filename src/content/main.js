@@ -168,7 +168,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     return { state, reason, ai };
   }
 
-  // Answer status requests from popup
+  // Answer status requests and manual-send requests from popup
   if (
     typeof chrome !== 'undefined' &&
     chrome.runtime &&
@@ -181,6 +181,82 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         });
         return true; // Asynchronous reply
       }
+
+      if (message && message.type === 'SS_SEND_REDACTED') {
+        // Guard: must be enabled and active
+        const interceptor = SafeShield.interceptor;
+        if (!interceptor || !interceptor.getIsEnabled()) {
+          sendResponse({ ok: false, reason: 'disabled' });
+          return false;
+        }
+
+        const adapter = getAdapter();
+        const composerEl = adapter ? adapter.findComposer() : null;
+        if (!composerEl) {
+          sendResponse({ ok: false, reason: 'no_composer' });
+          return false;
+        }
+
+        // Read current composer text
+        const composer = SafeShield.composer;
+        const redactor = SafeShield.redactor;
+        let text = '';
+        try {
+          text = composer ? composer.getText(composerEl) : '';
+        } catch {
+          sendResponse({ ok: false, message: 'Could not read composer text.' });
+          return false;
+        }
+
+        if (!text || text.trim().length === 0) {
+          sendResponse({ ok: false, reason: 'empty', message: 'Composer is empty.' });
+          return false;
+        }
+
+        // Run redaction
+        let redactResult;
+        try {
+          redactResult = redactor ? redactor.redact(text) : null;
+        } catch (err) {
+          sendResponse({ ok: false, message: 'Redaction error: ' + (err && err.message ? err.message : 'unknown') });
+          return false;
+        }
+
+        if (!redactResult || !redactResult.entities || redactResult.entities.length === 0) {
+          // No PII found — nothing to redact
+          sendResponse({ ok: false, reason: 'no_pii' });
+          return false;
+        }
+
+        // Write redacted text to composer and show modal (async, fire-and-forget; reply immediately)
+        try {
+          composer.setText(composerEl, redactResult.redactedText);
+        } catch {
+          sendResponse({ ok: false, message: 'Could not write redacted text to composer.' });
+          return false;
+        }
+
+        // Show the preview modal asynchronously on the page
+        const modal = SafeShield.modal;
+        if (modal && typeof modal.show === 'function') {
+          modal.show({
+            redactedText: redactResult.redactedText,
+            entities: redactResult.entities,
+            counts: redactResult.counts,
+          }).then((result) => {
+            const action = result ? result.action : 'cancel';
+            if (action === 'send' && SafeShield.composer && SafeShield.composer.submit) {
+              SafeShield.composer.submit(adapter);
+            } else if (action === 'restore' && composer && typeof composer.setText === 'function') {
+              composer.setText(composerEl, text);
+            }
+          }).catch(() => {});
+        }
+
+        sendResponse({ ok: true });
+        return false;
+      }
+
       return false;
     });
   }

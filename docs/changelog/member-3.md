@@ -14,3 +14,17 @@
   **Decisions:** none
   **Notes for others:** none
   **Next:** Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT.
+
+## M3-002 | 2026-10-25 03:16 | feat/solo-build
+**Prompt:** feat: add Send Redacted button to popup
+**What changed:**
+- Added a "Send Redacted" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.
+- Added a .send-redacted-feedback div (aria-live="polite") below the button that shows inline success/error messages without blocking the UI.
+- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).
+- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).
+  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)
+  **Status:** done
+  **Tasks:** T1-11
+  **Decisions:** none
+  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.
+  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).

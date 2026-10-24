@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-25 03:05",
+  "generatedAt": "2026-10-25 04:54",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "bf96b29",
+    "shortHead": "6db2149",
     "lastSubjects": [
+      "fix: popup decides support purely from SS_GET_STATUS reply",
       "fix: detect ChatGPT composer robustly and look up Send button lazily",
       "docs: add test report",
       "chore: apply prettier formatting",
-      "test: add QA static, behaviour and e2e tests",
-      "fix: fail closed when redaction cannot be applied to the composer"
+      "test: add QA static, behaviour and e2e tests"
     ],
-    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/changelog/member-3.md, docs/state/state.json, docs/state/tasks.json, src/ui/popup/popup.js, tests/popup.test.js"
+    "workingTree": "CHANGELOG.md, LICENSE, PROJECT_REPORT.md, PROJECT_STATE.md, README.md, docs/changelog/member-1.md, docs/changelog/member-2.md, docs/changelog/member-3.md, docs/changelog/member-4.md, docs/state/state.json, docs/state/tasks.json, src/content/main.js, src/core/validators.js, src/ui/popup/popup.css, src/ui/popup/popup.html, src/ui/popup/popup.js, tests/detector.test.js, tests/validators.test.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
         "total": 16,
-        "done": 4
+        "done": 6
       },
       "2": {
         "total": 6,
@@ -39,14 +39,14 @@
       },
       "M3": {
         "total": 5,
-        "done": 1
+        "done": 2
       },
       "M4": {
         "total": 7,
-        "done": 0
+        "done": 1
       }
     },
-    "tierOnePercent": 25
+    "tierOnePercent": 38
   },
   "tasks": {
     "Done": [
@@ -110,6 +110,35 @@
         ],
         "updated": "2026-10-25 03:04",
         "note": "Popup decides page support solely from SS_GET_STATUS reply"
+      },
+      {
+        "id": "T1-11",
+        "tier": 1,
+        "owner": "M3",
+        "title": "Detection preview modal (Shadow DOM) with Send redacted / Cancel",
+        "status": "done",
+        "deps": [],
+        "files": [
+          "src/ui/overlay/preview-modal.js",
+          "src/ui/overlay/preview-modal.css"
+        ],
+        "updated": "2026-10-25 03:16",
+        "note": "Send Redacted button added to popup UI; content script SS_SEND_REDACTED handler still needed (M2)"
+      },
+      {
+        "id": "T1-16",
+        "tier": 1,
+        "owner": "M4",
+        "title": "README, demo script, and test prompts",
+        "status": "done",
+        "deps": [],
+        "files": [
+          "README.md",
+          "docs/demo-script.md",
+          "docs/test-prompts.md"
+        ],
+        "updated": "2026-10-25 03:44",
+        "note": "README fully rewritten with all sections; LICENSE (MIT) added."
       }
     ],
     "In progress": [],
@@ -193,20 +222,6 @@
         "note": ""
       },
       {
-        "id": "T1-11",
-        "tier": 1,
-        "owner": "M3",
-        "title": "Detection preview modal (Shadow DOM) with Send redacted / Cancel",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "src/ui/overlay/preview-modal.js",
-          "src/ui/overlay/preview-modal.css"
-        ],
-        "updated": "",
-        "note": ""
-      },
-      {
         "id": "T1-12",
         "tier": 1,
         "owner": "M3",
@@ -262,21 +277,6 @@
         ],
         "updated": "",
         "note": ""
-      },
-      {
-        "id": "T1-16",
-        "tier": 1,
-        "owner": "M4",
-        "title": "README, demo script, and test prompts",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "README.md",
-          "docs/demo-script.md",
-          "docs/test-prompts.md"
-        ],
-        "updated": "",
-        "note": "Scaffold files exist but remain placeholders."
       },
       {
         "id": "T2-01",
@@ -514,67 +514,241 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M2-002",
-      "member": 2,
-      "sequence": 2,
-      "timestamp": "2026-10-25 02:33",
-      "branch": "feat/solo-build",
-      "heading": "## M2-002 | 2026-10-25 02:33 | feat/solo-build",
-      "line": 18,
-      "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n  **Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-07, T1-08\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Test in live browser extension environment against latest ChatGPT DOM.",
-      "full": "## M2-002 | 2026-10-25 02:33 | feat/solo-build\n**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n  **Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-07, T1-08\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Test in live browser extension environment against latest ChatGPT DOM.",
-      "prompt": "fix: detect ChatGPT composer robustly and look up Send button lazily",
-      "changes": [],
-      "files": "`src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)",
-      "status": "done",
-      "tasks": "T1-07, T1-08",
-      "decisions": "none",
-      "notes": "none",
-      "next": "Test in live browser extension environment against latest ChatGPT DOM."
-    },
-    {
-      "id": "M3-001",
-      "member": 3,
+      "id": "M1-001",
+      "member": 1,
       "sequence": 1,
-      "timestamp": "2026-10-25 03:04",
+      "timestamp": "2026-10-25 03:35",
       "branch": "feat/solo-build",
-      "heading": "## M3-001 | 2026-10-25 03:04 | feat/solo-build",
+      "heading": "## M1-001 | 2026-10-25 03:35 | feat/solo-build",
       "line": 3,
-      "file": "docs/changelog/member-3.md",
-      "body": "**Prompt:** fix: popup decides support only from SS_GET_STATUS reply\n**What changed:**\n\n- Removed tab.url and tab.title checks from checkTabStatus in popup.js; popup decides page support purely on the response to the SS_GET_STATUS message without requiring the tabs permission.\n- Handled chrome.runtime.lastError (\"Receiving end does not exist\" or unattached content script) and null response cleanly by setting status to unsupported (\"Not supported on this page\").\n- Added unit tests in tests/popup.test.js verifying that popup status logic works with tabs lacking url/title, handles connection errors gracefully, and does not require the tabs permission.\n  **Files:** `src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-10\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT.",
-      "full": "## M3-001 | 2026-10-25 03:04 | feat/solo-build\n**Prompt:** fix: popup decides support only from SS_GET_STATUS reply\n**What changed:**\n\n- Removed tab.url and tab.title checks from checkTabStatus in popup.js; popup decides page support purely on the response to the SS_GET_STATUS message without requiring the tabs permission.\n- Handled chrome.runtime.lastError (\"Receiving end does not exist\" or unattached content script) and null response cleanly by setting status to unsupported (\"Not supported on this page\").\n- Added unit tests in tests/popup.test.js verifying that popup status logic works with tabs lacking url/title, handles connection errors gracefully, and does not require the tabs permission.\n  **Files:** `src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-10\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT.",
-      "prompt": "fix: popup decides support only from SS_GET_STATUS reply",
-      "changes": [],
-      "files": "`src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)",
+      "file": "docs/changelog/member-1.md",
+      "body": "**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
+      "full": "## M1-001 | 2026-10-25 03:35 | feat/solo-build\n**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
+      "prompt": "fix: remove Verhoeff gate from Aadhaar detection",
+      "changes": [
+        "Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.",
+        "Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.",
+        "Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected."
+      ],
+      "files": "`src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)",
       "status": "done",
-      "tasks": "T1-10",
+      "tasks": "T1-03",
       "decisions": "none",
-      "notes": "none",
-      "next": "Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT."
+      "notes": "Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.",
+      "next": "Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders)."
     },
     {
-      "id": "M4-004",
-      "member": 4,
-      "sequence": 4,
-      "timestamp": "2026-10-24 21:10",
-      "branch": "chore/project-state-handoff",
-      "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
-      "line": 45,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
-      "changes": [],
-      "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
+      "id": "M2-003",
+      "member": 2,
+      "sequence": 3,
+      "timestamp": "2026-10-25 03:26",
+      "branch": "feat/solo-build",
+      "heading": "## M2-003 | 2026-10-25 03:26 | feat/solo-build",
+      "line": 35,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
+      "full": "## M2-003 | 2026-10-25 03:26 | feat/solo-build\n**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
+      "prompt": "fix: add SS_SEND_REDACTED handler in main.js",
+      "changes": [
+        "Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.",
+        "Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'."
+      ],
+      "files": "`src/content/main.js` (modified)",
       "status": "done",
       "tasks": "none",
       "decisions": "none",
-      "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.",
-      "next": "Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up."
+      "notes": "The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.",
+      "next": "Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears."
+    },
+    {
+      "id": "M3-002",
+      "member": 3,
+      "sequence": 2,
+      "timestamp": "2026-10-25 03:16",
+      "branch": "feat/solo-build",
+      "heading": "## M3-002 | 2026-10-25 03:16 | feat/solo-build",
+      "line": 18,
+      "file": "docs/changelog/member-3.md",
+      "body": "**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
+      "full": "## M3-002 | 2026-10-25 03:16 | feat/solo-build\n**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
+      "prompt": "feat: add Send Redacted button to popup",
+      "changes": [
+        "Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.",
+        "Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.",
+        "Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).",
+        "Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error)."
+      ],
+      "files": "`src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)",
+      "status": "done",
+      "tasks": "T1-11",
+      "decisions": "none",
+      "notes": "Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.",
+      "next": "M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish)."
+    },
+    {
+      "id": "M4-006",
+      "member": 4,
+      "sequence": 6,
+      "timestamp": "2026-10-25 04:53",
+      "branch": "feat/solo-build",
+      "heading": "## M4-006 | 2026-10-25 04:53 | feat/solo-build",
+      "line": 84,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
+      "full": "## M4-006 | 2026-10-25 04:53 | feat/solo-build\n**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
+      "prompt": "Publishing combined feature branch changes",
+      "changes": [
+        "<summarize each change>"
+      ],
+      "files": "<path> (added|modified|deleted)",
+      "status": "in review",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "none",
+      "next": "<one concrete next step>"
     }
   ],
   "recentActivity": [
+    {
+      "id": "M4-006",
+      "member": 4,
+      "sequence": 6,
+      "timestamp": "2026-10-25 04:53",
+      "branch": "feat/solo-build",
+      "heading": "## M4-006 | 2026-10-25 04:53 | feat/solo-build",
+      "line": 84,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
+      "full": "## M4-006 | 2026-10-25 04:53 | feat/solo-build\n**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
+      "prompt": "Publishing combined feature branch changes",
+      "changes": [
+        "<summarize each change>"
+      ],
+      "files": "<path> (added|modified|deleted)",
+      "status": "in review",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "none",
+      "next": "<one concrete next step>"
+    },
+    {
+      "id": "M4-006",
+      "member": 4,
+      "sequence": 6,
+      "timestamp": "2026-10-25 04:52",
+      "branch": "feat/solo-build",
+      "heading": "## M4-006 | 2026-10-25 04:52 | feat/solo-build",
+      "line": 72,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Publish all current changes together rather than splitting them by member.\n**What changed:**\n- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.\n- Ran the project test suite successfully before preparing the publication.\n**Files:** `docs/changelog/member-4.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.\n**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.",
+      "full": "## M4-006 | 2026-10-25 04:52 | feat/solo-build\n**Prompt:** Publish all current changes together rather than splitting them by member.\n**What changed:**\n- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.\n- Ran the project test suite successfully before preparing the publication.\n**Files:** `docs/changelog/member-4.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.\n**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.",
+      "prompt": "Publish all current changes together rather than splitting them by member.",
+      "changes": [
+        "Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.",
+        "Ran the project test suite successfully before preparing the publication."
+      ],
+      "files": "`docs/changelog/member-4.md` (modified)",
+      "status": "in review",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.",
+      "next": "Commit the complete change set and push `feat/solo-build` for a pull request into `main`."
+    },
+    {
+      "id": "M4-005",
+      "member": 4,
+      "sequence": 5,
+      "timestamp": "2026-10-25 03:43",
+      "branch": "feat/solo-build",
+      "heading": "## M4-005 | 2026-10-25 03:43 | feat/solo-build",
+      "line": 60,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** docs: add MIT license and complete open-source README\n**What changed:**\n- Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".\n- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.\n**Files:** `LICENSE` (added), `README.md` (modified)\n**Status:** done\n**Tasks:** T1-16\n**Decisions:** none\n**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.\n**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.",
+      "full": "## M4-005 | 2026-10-25 03:43 | feat/solo-build\n**Prompt:** docs: add MIT license and complete open-source README\n**What changed:**\n- Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".\n- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.\n**Files:** `LICENSE` (added), `README.md` (modified)\n**Status:** done\n**Tasks:** T1-16\n**Decisions:** none\n**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.\n**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.",
+      "prompt": "docs: add MIT license and complete open-source README",
+      "changes": [
+        "Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".",
+        "Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements."
+      ],
+      "files": "`LICENSE` (added), `README.md` (modified)",
+      "status": "done",
+      "tasks": "T1-16",
+      "decisions": "none",
+      "notes": "T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.",
+      "next": "Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main."
+    },
+    {
+      "id": "M1-001",
+      "member": 1,
+      "sequence": 1,
+      "timestamp": "2026-10-25 03:35",
+      "branch": "feat/solo-build",
+      "heading": "## M1-001 | 2026-10-25 03:35 | feat/solo-build",
+      "line": 3,
+      "file": "docs/changelog/member-1.md",
+      "body": "**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
+      "full": "## M1-001 | 2026-10-25 03:35 | feat/solo-build\n**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
+      "prompt": "fix: remove Verhoeff gate from Aadhaar detection",
+      "changes": [
+        "Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.",
+        "Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.",
+        "Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected."
+      ],
+      "files": "`src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)",
+      "status": "done",
+      "tasks": "T1-03",
+      "decisions": "none",
+      "notes": "Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.",
+      "next": "Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders)."
+    },
+    {
+      "id": "M2-003",
+      "member": 2,
+      "sequence": 3,
+      "timestamp": "2026-10-25 03:26",
+      "branch": "feat/solo-build",
+      "heading": "## M2-003 | 2026-10-25 03:26 | feat/solo-build",
+      "line": 35,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
+      "full": "## M2-003 | 2026-10-25 03:26 | feat/solo-build\n**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
+      "prompt": "fix: add SS_SEND_REDACTED handler in main.js",
+      "changes": [
+        "Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.",
+        "Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'."
+      ],
+      "files": "`src/content/main.js` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.",
+      "next": "Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears."
+    },
+    {
+      "id": "M3-002",
+      "member": 3,
+      "sequence": 2,
+      "timestamp": "2026-10-25 03:16",
+      "branch": "feat/solo-build",
+      "heading": "## M3-002 | 2026-10-25 03:16 | feat/solo-build",
+      "line": 18,
+      "file": "docs/changelog/member-3.md",
+      "body": "**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
+      "full": "## M3-002 | 2026-10-25 03:16 | feat/solo-build\n**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
+      "prompt": "feat: add Send Redacted button to popup",
+      "changes": [
+        "Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.",
+        "Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.",
+        "Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).",
+        "Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error)."
+      ],
+      "files": "`src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)",
+      "status": "done",
+      "tasks": "T1-11",
+      "decisions": "none",
+      "notes": "Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.",
+      "next": "M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish)."
+    },
     {
       "id": "M3-001",
       "member": 3,
@@ -718,6 +892,31 @@
   ],
   "openHandoffs": [
     {
+      "id": "M4-006",
+      "member": 4,
+      "notes": "All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`."
+    },
+    {
+      "id": "M4-005",
+      "member": 4,
+      "notes": "T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders."
+    },
+    {
+      "id": "M1-001",
+      "member": 1,
+      "notes": "Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate."
+    },
+    {
+      "id": "M2-003",
+      "member": 2,
+      "notes": "The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows."
+    },
+    {
+      "id": "M3-002",
+      "member": 3,
+      "notes": "Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end."
+    },
+    {
       "id": "M4-004",
       "member": 4,
       "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames."
@@ -801,6 +1000,14 @@
     },
     {
       "path": "GEMINI.md",
+      "classification": null
+    },
+    {
+      "path": "LICENSE",
+      "classification": null
+    },
+    {
+      "path": "PROJECT_REPORT.md",
       "classification": null
     },
     {
@@ -957,7 +1164,7 @@
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (203 lines)"
+      "classification": "implemented (273 lines)"
     },
     {
       "path": "src/core/detector.js",
@@ -1013,15 +1220,15 @@
     },
     {
       "path": "src/ui/popup/popup.css",
-      "classification": "implemented (314 lines)"
+      "classification": "implemented (382 lines)"
     },
     {
       "path": "src/ui/popup/popup.html",
-      "classification": "implemented (108 lines)"
+      "classification": "implemented (118 lines)"
     },
     {
       "path": "src/ui/popup/popup.js",
-      "classification": "implemented (136 lines)"
+      "classification": "implemented (190 lines)"
     },
     {
       "path": "src/ui/shared.css",
@@ -1033,7 +1240,7 @@
     },
     {
       "path": "tests/detector.test.js",
-      "classification": "implemented (103 lines)"
+      "classification": "implemented (107 lines)"
     },
     {
       "path": "tests/e2e/mock-page.html",

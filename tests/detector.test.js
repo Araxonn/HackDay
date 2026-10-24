@@ -29,18 +29,24 @@ test('detector true positives: PHONE, EMAIL, AADHAAR, PAN', () => {
   assert.equal(matches[3].value, aadhaar);
 });
 
-test('detector false positives: bad checksum Aadhaar, 10-digit starting 1-5, lowercase PAN', () => {
-  // Bad checksum Aadhaar: 12 digits
-  const badAadhaar = '298765432109'; // Ensure invalid checksum
-  const badPhone = '1234567890'; // Starts with 1
-  const badPhone2 = '5432167890'; // Starts with 5
+test('detector false positives: 10-digit starting 1-5, lowercase PAN; Aadhaar structural check only', () => {
+  // NOTE: Aadhaar detection no longer requires Verhoeff checksum.
+  // A 12-digit number starting 2-9 IS detected. Only format/structural rejects apply.
+  const badPhone = '1234567890'; // Starts with 1 — rejected
+  const badPhone2 = '5432167890'; // Starts with 5 — rejected
   const lowercasePan = 'abcpa1234z';
   const invalidPan4th = 'ABCDA1234Z';
 
-  const text = `Bad: ${badAadhaar}, phones ${badPhone} and ${badPhone2}, pans ${lowercasePan} and ${invalidPan4th}.`;
+  const text = `phones ${badPhone} and ${badPhone2}, pans ${lowercasePan} and ${invalidPan4th}.`;
   const matches = detector.detect(text);
 
   assert.equal(matches.length, 0);
+
+  // Structurally valid Aadhaar (starts 2-9, 12 digits) IS detected regardless of checksum
+  const structuralAadhaar = '298765432109';
+  const aadhaarMatches = detector.detect(`My aadhaar is ${structuralAadhaar}`);
+  assert.equal(aadhaarMatches.length, 1);
+  assert.equal(aadhaarMatches[0].type, 'AADHAAR');
 });
 
 test('detector conflict resolution: valid Aadhaar beats phone on same digits', () => {

@@ -31,3 +31,15 @@
   **Decisions:** none
   **Notes for others:** none
   **Next:** Test in live browser extension environment against latest ChatGPT DOM.
+
+## M2-003 | 2026-10-25 03:26 | feat/solo-build
+**Prompt:** fix: add SS_SEND_REDACTED handler in main.js
+**What changed:**
+- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.
+- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.
+  **Files:** `src/content/main.js` (modified)
+  **Status:** done
+  **Tasks:** none
+  **Decisions:** none
+  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.
+  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.
