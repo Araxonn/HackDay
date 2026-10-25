@@ -6,7 +6,7 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 13 |
+| M1 | Detection engine | 14 |
 | M2 | Platform integration | 3 |
 | M3 | UI/UX | 2 |
 | M4 | Foundation, data, and docs | 7 |
@@ -14,6 +14,20 @@
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Detection engine
+
+## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state
+**Prompt:** fix state check stale artifacts
+**What changed:**
+- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.
+- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.
+**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.
+**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.
 
 **Role:** Detection engine
 
