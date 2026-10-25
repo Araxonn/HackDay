@@ -15,6 +15,43 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     chrome.storage.local &&
     typeof chrome.storage.local.get === 'function';
 
+  function isContextInvalidated(error) {
+    return Boolean(
+      error &&
+        typeof error.message === 'string' &&
+        error.message.includes('Extension context invalidated'),
+    );
+  }
+
+  function getRuntimeError() {
+    try {
+      return chrome.runtime && chrome.runtime.lastError
+        ? chrome.runtime.lastError
+        : null;
+    } catch (error) {
+      if (isContextInvalidated(error)) return error;
+      throw error;
+    }
+  }
+
+  function handleStorageError(resolve, reject, fallback, result) {
+    try {
+      const runtimeError = getRuntimeError();
+      if (!runtimeError) {
+        resolve(result);
+        return;
+      }
+      if (isContextInvalidated(runtimeError)) {
+        resolve(fallback);
+        return;
+      }
+      reject(new Error(runtimeError.message));
+    } catch (error) {
+      if (isContextInvalidated(error)) resolve(fallback);
+      else reject(error);
+    }
+  }
+
   // In-memory fallback for Node environments and non-extension contexts
   const memoryStore = {
     [STORAGE_KEYS.ENABLED]: true,
@@ -43,21 +80,34 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   async function getEnabled() {
     if (hasChromeStorage) {
       return new Promise((resolve) => {
-        chrome.storage.local.get([STORAGE_KEYS.ENABLED], (res) => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            console.error(
-              'Storage getEnabled error:',
-              chrome.runtime.lastError,
-            );
-            resolve(true);
-            return;
-          }
-          resolve(
-            res[STORAGE_KEYS.ENABLED] !== undefined
-              ? Boolean(res[STORAGE_KEYS.ENABLED])
-              : true,
-          );
-        });
+        try {
+          chrome.storage.local.get([STORAGE_KEYS.ENABLED], (res) => {
+            try {
+              const runtimeError = getRuntimeError();
+              if (runtimeError) {
+                if (!isContextInvalidated(runtimeError)) {
+                  console.error('Storage getEnabled error:', runtimeError);
+                }
+                resolve(true);
+                return;
+              }
+              resolve(
+                res[STORAGE_KEYS.ENABLED] !== undefined
+                  ? Boolean(res[STORAGE_KEYS.ENABLED])
+                  : true,
+              );
+            } catch (error) {
+              if (isContextInvalidated(error)) resolve(true);
+              else {
+                console.error('Storage getEnabled error:', error);
+                resolve(true);
+              }
+            }
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve(true);
+          else throw error;
+        }
       });
     }
     return Boolean(memoryStore[STORAGE_KEYS.ENABLED]);
@@ -67,13 +117,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     const val = Boolean(bool);
     if (hasChromeStorage) {
       return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [STORAGE_KEYS.ENABLED]: val }, () => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-            return;
-          }
-          resolve();
-        });
+        try {
+          chrome.storage.local.set({ [STORAGE_KEYS.ENABLED]: val }, () => {
+            handleStorageError(resolve, reject, undefined);
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve();
+          else reject(error);
+        }
       });
     }
     const prev = memoryStore[STORAGE_KEYS.ENABLED];
@@ -86,16 +137,32 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   async function getStats() {
     if (hasChromeStorage) {
       return new Promise((resolve) => {
-        chrome.storage.local.get([STORAGE_KEYS.STATS], (res) => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            console.error('Storage getStats error:', chrome.runtime.lastError);
-            resolve({});
-            return;
-          }
-          resolve(
-            res[STORAGE_KEYS.STATS] ? { ...res[STORAGE_KEYS.STATS] } : {},
-          );
-        });
+        try {
+          chrome.storage.local.get([STORAGE_KEYS.STATS], (res) => {
+            try {
+              const runtimeError = getRuntimeError();
+              if (runtimeError) {
+                if (!isContextInvalidated(runtimeError)) {
+                  console.error('Storage getStats error:', runtimeError);
+                }
+                resolve({});
+                return;
+              }
+              resolve(
+                res[STORAGE_KEYS.STATS] ? { ...res[STORAGE_KEYS.STATS] } : {},
+              );
+            } catch (error) {
+              if (isContextInvalidated(error)) resolve({});
+              else {
+                console.error('Storage getStats error:', error);
+                resolve({});
+              }
+            }
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve({});
+          else throw error;
+        }
       });
     }
     return { ...memoryStore[STORAGE_KEYS.STATS] };
@@ -116,13 +183,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     if (hasChromeStorage) {
       return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [STORAGE_KEYS.STATS]: nextStats }, () => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-            return;
-          }
-          resolve(nextStats);
-        });
+        try {
+          chrome.storage.local.set({ [STORAGE_KEYS.STATS]: nextStats }, () => {
+            handleStorageError(resolve, reject, nextStats, nextStats);
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve(nextStats);
+          else reject(error);
+        }
       });
     }
 
@@ -135,13 +203,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   async function resetStats() {
     if (hasChromeStorage) {
       return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [STORAGE_KEYS.STATS]: {} }, () => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-            return;
-          }
-          resolve();
-        });
+        try {
+          chrome.storage.local.set({ [STORAGE_KEYS.STATS]: {} }, () => {
+            handleStorageError(resolve, reject, undefined);
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve();
+          else reject(error);
+        }
       });
     }
     const prev = memoryStore[STORAGE_KEYS.STATS];
@@ -152,13 +221,30 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   async function getAiAssist() {
     if (hasChromeStorage) {
       return new Promise((resolve) => {
-        chrome.storage.local.get([STORAGE_KEYS.AI_ASSIST], (res) => {
-          if (chrome.runtime && chrome.runtime.lastError) {
+        try {
+          chrome.storage.local.get([STORAGE_KEYS.AI_ASSIST], (res) => {
+            try {
+              const runtimeError = getRuntimeError();
+              if (runtimeError) {
+                resolve(false);
+                return;
+              }
+              resolve(Boolean(res[STORAGE_KEYS.AI_ASSIST]));
+            } catch (error) {
+              if (isContextInvalidated(error)) resolve(false);
+              else {
+                console.error('Storage getAiAssist error:', error);
+                resolve(false);
+              }
+            }
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve(false);
+          else {
+            console.error('Storage getAiAssist error:', error);
             resolve(false);
-            return;
           }
-          resolve(Boolean(res[STORAGE_KEYS.AI_ASSIST]));
-        });
+        }
       });
     }
     return Boolean(memoryStore[STORAGE_KEYS.AI_ASSIST]);
@@ -168,13 +254,28 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     const val = Boolean(bool);
     if (hasChromeStorage) {
       return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [STORAGE_KEYS.AI_ASSIST]: val }, () => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-            return;
-          }
-          resolve();
-        });
+        try {
+          chrome.storage.local.set({ [STORAGE_KEYS.AI_ASSIST]: val }, () => {
+            try {
+              const runtimeError = getRuntimeError();
+              if (runtimeError) {
+                if (isContextInvalidated(runtimeError)) {
+                  resolve();
+                } else {
+                  reject(new Error(runtimeError.message));
+                }
+                return;
+              }
+              resolve();
+            } catch (error) {
+              if (isContextInvalidated(error)) resolve();
+              else reject(error);
+            }
+          });
+        } catch (error) {
+          if (isContextInvalidated(error)) resolve();
+          else reject(error);
+        }
       });
     }
     const prev = memoryStore[STORAGE_KEYS.AI_ASSIST];
@@ -189,7 +290,16 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return () => {};
     }
 
-    if (hasChromeStorage && chrome.storage.onChanged) {
+    let onChanged;
+    try {
+      onChanged =
+        hasChromeStorage && chrome.storage && chrome.storage.onChanged;
+    } catch (error) {
+      if (isContextInvalidated(error)) return () => {};
+      throw error;
+    }
+
+    if (onChanged) {
       const listener = (changes, areaName) => {
         if (areaName !== 'local') return;
         if (changes[STORAGE_KEYS.ENABLED]) {
@@ -214,9 +324,18 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           });
         }
       };
-      chrome.storage.onChanged.addListener(listener);
+      try {
+        onChanged.addListener(listener);
+      } catch (error) {
+        if (isContextInvalidated(error)) return () => {};
+        throw error;
+      }
       return () => {
-        chrome.storage.onChanged.removeListener(listener);
+        try {
+          onChanged.removeListener(listener);
+        } catch (error) {
+          if (!isContextInvalidated(error)) throw error;
+        }
       };
     }
 
