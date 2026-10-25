@@ -1,18 +1,16 @@
 {
-  "generatedAt": "2026-10-25 07:21",
+  "generatedAt": "2026-10-25 07:28",
   "git": {
-    "branch": "address_detection",
-    "shortHead": "8461c7d",
+    "branch": "copilot/fix-failing-github-actions-job-state",
+    "shortHead": "4d8d431",
     "lastSubjects": [
-      "feat: add evaluation script for detect() accuracy against dataset",
-      "feat: add README for accuracy evaluation of personal data detection",
-      "feat: add initial dataset for phone, email, PAN, Aadhaar, and other identifiers",
-      "feat: complete SafeShield implementation",
-      "fix: popup decides support purely from SS_GET_STATUS reply"
+      "chore: regenerate project state artifacts",
+      "Initial plan",
+      "Merge pull request #1 from Araxonn/address_detection"
     ],
-    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/issues.md, docs/state/state.json, docs/state/tasks.json, src/ai/gemma.js, src/background/service-worker.js, src/content/interceptor.js, src/core/detector.js, src/core/patterns.js, src/shared/storage.js, src/ui/overlay/preview-modal.js, src/ui/popup/popup.js, tests/gemma.test.js, tests/qa-behaviour.test.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/state.json"
   },
-  "project": "## Overview\r\n\r\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\r\n\r\n## Problem statement\r\n\r\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\r\n\r\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\r\n\r\n## Requirements\r\n\r\nCore features:\r\n\r\n- Automatic PII detection.\r\n- Smart redaction with stable, typed placeholders.\r\n- Pre-submission protection before text leaves the page.\r\n- Privacy shield toggle.\r\n- Detection preview before sending.\r\n- Local restoration of original text.\r\n- Privacy dashboard with counts only.\r\n- Indian language support, including Hindi/Hinglish where feasible.\r\n- Clean, modern UI.\r\n\r\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\r\n\r\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\r\n\r\n## Privacy rules\r\n\r\n- All detection runs locally.\r\n- Never send unredacted text to any external service.\r\n- Fail closed: if detection or redaction throws, block the send and warn the user.\r\n- Show “Active” only if the composer is found and interception hooks are attached.\r\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\r\n- Persist dashboard counts only, never detected values.\r\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\r\n\r\n## Tech stack\r\n\r\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\r\n\r\n## Architecture and data flow\r\n\r\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\r\n\r\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\r\n\r\n## Contracts\r\n\r\n- `detect(text) -> [{ type, start, end, value }]`\r\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\r\n- `restore(text, entities) -> string`\r\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\r\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\r\n\r\n## Ownership map\r\n\r\n- M1: detection engine (`src/core`) and tests.\r\n- M2: platform integration (`src/content`).\r\n- M3: UI/UX (`src/ui`) and assets.\r\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\r\n\r\n## Conventions\r\n\r\n- Branch names: `feat/<member>-<task>`.\r\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\r\n- Keep pull requests small.\r\n- Review pairing: M1 <-> M2 and M3 <-> M4.\r\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\r\n\r\n## Open questions\r\n\r\n- Final product name: “Safe Shield” or “GuptAI”.",
+  "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
@@ -515,28 +513,27 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M1-013",
+      "id": "M1-014",
       "member": 1,
-      "sequence": 13,
-      "timestamp": "2026-10-25 07:14",
-      "branch": "main",
-      "heading": "## M1-013 | 2026-10-25 07:14 | main",
-      "line": 158,
+      "sequence": 14,
+      "timestamp": "2026-10-25 07:27",
+      "branch": "copilot/fix-failing-github-actions-job-state",
+      "heading": "## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state",
+      "line": 171,
       "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: detect pasted addresses after editor insertion\n**What changed:**\n- Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.\n- The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.\n- Added regression coverage for address detection through post-paste input events.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.\n**Next:** Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning.",
-      "full": "## M1-013 | 2026-10-25 07:14 | main\n**Prompt:** fix: detect pasted addresses after editor insertion\n**What changed:**\n- Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.\n- The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.\n- Added regression coverage for address detection through post-paste input events.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.\n**Next:** Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning.",
-      "prompt": "fix: detect pasted addresses after editor insertion",
+      "body": "**Prompt:** fix state check stale artifacts\n**What changed:**\n- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.\n- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.\n**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.\n**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.",
+      "full": "## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state\n**Prompt:** fix state check stale artifacts\n**What changed:**\n- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.\n- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.\n**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.\n**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.",
+      "prompt": "fix state check stale artifacts",
       "changes": [
-        "Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.",
-        "The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.",
-        "Added regression coverage for address detection through post-paste input events."
+        "Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.",
+        "Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally."
       ],
-      "files": "`src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)",
+      "files": "`PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)",
       "status": "in review",
-      "tasks": "T2-04",
+      "tasks": "none",
       "decisions": "none",
-      "notes": "The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.",
-      "next": "Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning."
+      "notes": "`state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.",
+      "next": "Re-run the failed GitHub Actions run and confirm the `state` job is green."
     },
     {
       "id": "M2-003",
@@ -610,6 +607,29 @@
     }
   ],
   "recentActivity": [
+    {
+      "id": "M1-014",
+      "member": 1,
+      "sequence": 14,
+      "timestamp": "2026-10-25 07:27",
+      "branch": "copilot/fix-failing-github-actions-job-state",
+      "heading": "## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state",
+      "line": 171,
+      "file": "docs/changelog/member-1.md",
+      "body": "**Prompt:** fix state check stale artifacts\n**What changed:**\n- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.\n- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.\n**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.\n**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.",
+      "full": "## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state\n**Prompt:** fix state check stale artifacts\n**What changed:**\n- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.\n- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.\n**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.\n**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.",
+      "prompt": "fix state check stale artifacts",
+      "changes": [
+        "Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.",
+        "Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally."
+      ],
+      "files": "`PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)",
+      "status": "in review",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "`state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.",
+      "next": "Re-run the failed GitHub Actions run and confirm the `state` job is green."
+    },
     {
       "id": "M1-013",
       "member": 1,
@@ -941,32 +961,14 @@
       "decisions": "none",
       "notes": "All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.",
       "next": "Commit the complete change set and push `feat/solo-build` for a pull request into `main`."
-    },
-    {
-      "id": "M4-005",
-      "member": 4,
-      "sequence": 5,
-      "timestamp": "2026-10-25 03:43",
-      "branch": "feat/solo-build",
-      "heading": "## M4-005 | 2026-10-25 03:43 | feat/solo-build",
-      "line": 60,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** docs: add MIT license and complete open-source README\n**What changed:**\n- Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".\n- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.\n**Files:** `LICENSE` (added), `README.md` (modified)\n**Status:** done\n**Tasks:** T1-16\n**Decisions:** none\n**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.\n**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.",
-      "full": "## M4-005 | 2026-10-25 03:43 | feat/solo-build\n**Prompt:** docs: add MIT license and complete open-source README\n**What changed:**\n- Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".\n- Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements.\n**Files:** `LICENSE` (added), `README.md` (modified)\n**Status:** done\n**Tasks:** T1-16\n**Decisions:** none\n**Notes for others:** T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.\n**Next:** Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main.",
-      "prompt": "docs: add MIT license and complete open-source README",
-      "changes": [
-        "Added `LICENSE` file (MIT) with copyright line \"Copyright (c) 2026 SafeShield Contributors\".",
-        "Rewrote `README.md` completely: added shields/badges, About section, Tier 1/2/3 feature tables, PII type table, Privacy Model & Guarantees section, Tech Stack table, Installation, Usage, Testing, full repo tree, Optional Gemma section, DevTools section, Component Contracts, Contributing quick-start, team structure, Limitations, License section, and Acknowledgements."
-      ],
-      "files": "`LICENSE` (added), `README.md` (modified)",
-      "status": "done",
-      "tasks": "T1-16",
-      "decisions": "none",
-      "notes": "T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.",
-      "next": "Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main."
     }
   ],
   "openHandoffs": [
+    {
+      "id": "M1-014",
+      "member": 1,
+      "notes": "`state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully."
+    },
     {
       "id": "M1-013",
       "member": 1,

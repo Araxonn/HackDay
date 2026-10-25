@@ -167,3 +167,15 @@
 **Decisions:** none
 **Notes for others:** The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.
 **Next:** Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning.
+
+## M1-014 | 2026-10-25 07:27 | copilot/fix-failing-github-actions-job-state
+**Prompt:** fix state check stale artifacts
+**What changed:**
+- Regenerated stale state artifacts so `state:check` matches the current branch/head metadata.
+- Verified the same CI checks used by the `state` workflow (`npm run state:check` and `npm test`) now pass locally.
+**Files:** `PROJECT_STATE.md` (modified), `docs/state/state.json` (modified), `docs/changelog/member-1.md` (modified)
+**Status:** in review
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** `state:check` still prints privacy WARN lines for fake test data patterns, but exits successfully.
+**Next:** Re-run the failed GitHub Actions run and confirm the `state` job is green.
