@@ -178,6 +178,28 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return true;
     }
 
+    const composer = composerEl || findComposer(d);
+    const form = composer
+      ? composer.form ||
+        (typeof composer.closest === 'function'
+          ? composer.closest('form')
+          : null)
+      : null;
+
+    // Prefer controls belonging to the active composer. This prevents an
+    // unrelated page-level "Send" control from receiving the redacted click.
+    if (form) {
+      const scopedButtons = queryAll(
+        form,
+        'button[data-testid="send-button"], button[aria-label*="Send" i], button[type="submit"], input[type="submit"], button:not([type])',
+      );
+      for (const btn of scopedButtons) {
+        if (isCandidateValid(btn)) {
+          return btn;
+        }
+      }
+    }
+
     // 1. button[data-testid="send-button"]
     const testIdButtons = queryAll(d, 'button[data-testid="send-button"]');
     for (const btn of testIdButtons) {
@@ -214,13 +236,6 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     }
 
     // 3. Submit button inside composer's form
-    const composer = composerEl || findComposer(d);
-    const form = composer
-      ? composer.form ||
-        (typeof composer.closest === 'function'
-          ? composer.closest('form')
-          : null)
-      : null;
     if (form) {
       const formButtons = queryAll(
         form,

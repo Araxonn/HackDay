@@ -87,12 +87,21 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     return new Promise((resolve) => {
       const root = getShadowRoot();
       const previousActiveEl = document.activeElement;
+      hostEl.style.pointerEvents = 'auto';
 
       const backdrop = document.createElement('div');
       backdrop.className = 'ss-backdrop';
       backdrop.setAttribute('role', 'dialog');
       backdrop.setAttribute('aria-modal', 'true');
       backdrop.setAttribute('aria-labelledby', 'ss-modal-title');
+      backdrop.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        },
+        true,
+      );
 
       const totalItems = Object.values(counts || {}).reduce((a, b) => a + b, 0);
       const noteBanner = note

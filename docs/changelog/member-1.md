@@ -204,3 +204,15 @@
 **Decisions:** none
 **Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.
 **Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.
+
+## M1-017 | 2026-10-25 09:04 | address_detection
+**Prompt:** fix: isolate active ChatGPT send control
+**What changed:**
+- Made the modal host accept pointer events only while the preview is open and shielded the backdrop from host-page click handling.
+- Prioritized send controls belonging to the active composer form before global ChatGPT page controls.
+**Files:** `src/content/adapters/chatgpt.js` (modified), `src/ui/overlay/preview-modal.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** This specifically addresses the Chariot redirect during Send redacted. Reload the extension and refresh ChatGPT before testing.
+**Next:** Submit a fake phone prompt and confirm the page stays on ChatGPT and only the placeholder is sent.
