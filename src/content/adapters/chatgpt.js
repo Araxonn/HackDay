@@ -221,7 +221,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     // the active composer and only inspect controls in its own DOM region.
     if (composer) {
       let region = composer.parentElement || composer.parentNode || null;
-      for (let depth = 0; region && depth < 6; depth += 1) {
+      for (let depth = 0; region && depth < 3; depth += 1) {
         const scopedButtons = querySelectors(region, [
           'button[data-testid="send-button"]',
           'button[aria-label*="Send" i]',

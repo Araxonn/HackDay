@@ -6,7 +6,7 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 18 |
+| M1 | Detection engine | 19 |
 | M2 | Platform integration | 3 |
 | M3 | UI/UX | 2 |
 | M4 | Foundation, data, and docs | 7 |
@@ -14,6 +14,20 @@
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Detection engine
+
+## M1-019 | 2026-10-25 09:19 | address_detection
+**Prompt:** fix: submit through active composer form
+**What changed:**
+- Submission now prefers the active composer form's `requestSubmit()` path, allowing ChatGPT's own submit handling to process the already-redacted text.
+- Reduced composer-region traversal so a send control must be close to the active composer; unrelated page controls are not eligible.
+**Files:** `src/content/composer.js` (modified), `src/content/adapters/chatgpt.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** Reload the extension and refresh ChatGPT before testing. The preview remains unchanged; only the final submit mechanism changed.
+**Next:** Test `Contact support at +91 98765 43210.` and confirm it stays on ChatGPT and sends `Contact support at [PHONE_1].`.
 
 **Role:** Detection engine
 

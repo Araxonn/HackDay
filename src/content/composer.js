@@ -102,6 +102,17 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     if (!btn || btn.disabled || btn.getAttribute('aria-disabled') === 'true') {
       return false;
     }
+
+    const form =
+      (composerEl && composerEl.form) ||
+      (composerEl &&
+        typeof composerEl.closest === 'function' &&
+        composerEl.closest('form'));
+    if (form && typeof form.requestSubmit === 'function') {
+      form.requestSubmit(btn);
+      return true;
+    }
+
     btn.click();
     return true;
   }
