@@ -141,6 +141,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     return [];
   }
 
+  function querySelectors(root, selectors) {
+    const result = [];
+    const seen = new Set();
+    for (const selector of selectors) {
+      for (const element of queryAll(root, selector)) {
+        if (!seen.has(element)) {
+          seen.add(element);
+          result.push(element);
+        }
+      }
+    }
+    return result;
+  }
+
   function findComposer(doc) {
     const d = doc || (typeof document !== 'undefined' ? document : null);
     if (!d) return null;
@@ -189,10 +203,13 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     // Prefer controls belonging to the active composer. This prevents an
     // unrelated page-level "Send" control from receiving the redacted click.
     if (form) {
-      const scopedButtons = queryAll(
-        form,
-        'button[data-testid="send-button"], button[aria-label*="Send" i], button[type="submit"], input[type="submit"], button:not([type])',
-      );
+      const scopedButtons = querySelectors(form, [
+        'button[data-testid="send-button"]',
+        'button[aria-label*="Send" i]',
+        'button[type="submit"]',
+        'input[type="submit"]',
+        'button:not([type])',
+      ]);
       for (const btn of scopedButtons) {
         if (isCandidateValid(btn)) {
           return btn;
@@ -200,64 +217,27 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       }
     }
 
-    // 1. button[data-testid="send-button"]
-    const testIdButtons = queryAll(d, 'button[data-testid="send-button"]');
-    for (const btn of testIdButtons) {
-      if (isCandidateValid(btn)) {
-        return btn;
-      }
-    }
-
-    // 2. button[aria-label*="Send"] (case-insensitive)
-    let ariaButtons;
-    try {
-      ariaButtons = queryAll(d, 'button[aria-label*="Send" i]');
-    } catch {
-      ariaButtons = [];
-    }
-    if (ariaButtons.length === 0) {
-      const allButtons = queryAll(d, 'button');
-      ariaButtons = allButtons.filter((b) => {
-        const label =
-          (typeof b.getAttribute === 'function' &&
-            b.getAttribute('aria-label')) ||
-          '';
-        return /send/i.test(label);
-      });
-    }
-    for (const btn of ariaButtons) {
-      const label =
-        (typeof btn.getAttribute === 'function' &&
-          btn.getAttribute('aria-label')) ||
-        '';
-      if (/send/i.test(label) && isCandidateValid(btn)) {
-        return btn;
-      }
-    }
-
-    // 3. Submit button inside composer's form
-    if (form) {
-      const formButtons = queryAll(
-        form,
-        'button[type="submit"], input[type="submit"], button:not([type])',
-      );
-      for (const btn of formButtons) {
-        if (isCandidateValid(btn)) {
-          return btn;
+    // ChatGPT may render the composer controls without a form. Walk up from
+    // the active composer and only inspect controls in its own DOM region.
+    if (composer) {
+      let region = composer.parentElement || composer.parentNode || null;
+      for (let depth = 0; region && depth < 6; depth += 1) {
+        const scopedButtons = querySelectors(region, [
+          'button[data-testid="send-button"]',
+          'button[aria-label*="Send" i]',
+          'button[type="submit"]',
+          'button:not([type])',
+        ]);
+        for (const btn of scopedButtons) {
+          if (isCandidateValid(btn)) {
+            return btn;
+          }
         }
+        region = region.parentElement || region.parentNode || null;
       }
     }
 
-    const docFormSubmits = queryAll(
-      d,
-      'form button[type="submit"], form input[type="submit"]',
-    );
-    for (const btn of docFormSubmits) {
-      if (isCandidateValid(btn)) {
-        return btn;
-      }
-    }
-
+    // Never click an unrelated page-level "Send" control.
     return null;
   }
 

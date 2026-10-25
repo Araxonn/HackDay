@@ -216,3 +216,16 @@
 **Decisions:** none
 **Notes for others:** This specifically addresses the Chariot redirect during Send redacted. Reload the extension and refresh ChatGPT before testing.
 **Next:** Submit a fake phone prompt and confirm the page stays on ChatGPT and only the placeholder is sent.
+
+## M1-018 | 2026-10-25 09:11 | address_detection
+**Prompt:** fix: fail closed on unrelated send controls
+**What changed:**
+- Removed the page-wide “Send” button fallback from the ChatGPT adapter.
+- Send controls are now selected only from the active composer form or its nearby DOM region, preventing unrelated navigation controls from being clicked.
+- Added selector handling that supports both real DOM selector lists and the project test DOM.
+**Files:** `src/content/adapters/chatgpt.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** If ChatGPT changes its composer markup, SafeShield will show a send-blocked warning rather than clicking an unrelated page control.
+**Next:** Reload the extension and ChatGPT, test a fake phone prompt, and confirm no external page opens.

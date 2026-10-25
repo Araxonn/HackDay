@@ -6,7 +6,7 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 17 |
+| M1 | Detection engine | 18 |
 | M2 | Platform integration | 3 |
 | M3 | UI/UX | 2 |
 | M4 | Foundation, data, and docs | 7 |
@@ -14,6 +14,21 @@
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Detection engine
+
+## M1-018 | 2026-10-25 09:11 | address_detection
+**Prompt:** fix: fail closed on unrelated send controls
+**What changed:**
+- Removed the page-wide “Send” button fallback from the ChatGPT adapter.
+- Send controls are now selected only from the active composer form or its nearby DOM region, preventing unrelated navigation controls from being clicked.
+- Added selector handling that supports both real DOM selector lists and the project test DOM.
+**Files:** `src/content/adapters/chatgpt.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** If ChatGPT changes its composer markup, SafeShield will show a send-blocked warning rather than clicking an unrelated page control.
+**Next:** Reload the extension and ChatGPT, test a fake phone prompt, and confirm no external page opens.
 
 **Role:** Detection engine
 
