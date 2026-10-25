@@ -1,0 +1,303 @@
+[
+  {
+    "id": "phone-01",
+    "group": "dev",
+    "text": "My number is [[PHONE:9876543210]], please call me."
+  },
+  {
+    "id": "phone-02",
+    "group": "dev",
+    "text": "Call me on [[PHONE:+91 98765 43210]] after 6 pm."
+  },
+  {
+    "id": "phone-03",
+    "group": "dev",
+    "text": "WhatsApp: [[PHONE:+91-98765-43210]]"
+  },
+  {
+    "id": "phone-04",
+    "group": "dev",
+    "text": "Reach me at [[PHONE:98765 43210]] anytime."
+  },
+  {
+    "id": "phone-05",
+    "group": "dev",
+    "text": "Entry with a leading zero: [[PHONE:09876543210]] works too."
+  },
+  {
+    "id": "phone-06",
+    "group": "dev",
+    "text": "मेरा नंबर [[PHONE:9876543210~deva]] है, कृपया कॉल करें।"
+  },
+  {
+    "id": "phone-07",
+    "group": "dev",
+    "text": "Mera mobile number [[PHONE:8123456789]] hai."
+  },
+  {
+    "id": "phone-08",
+    "group": "dev",
+    "text": "Two numbers: [[PHONE:7012345678]] and [[PHONE:6123456789]]."
+  },
+  {
+    "id": "email-01",
+    "group": "dev",
+    "text": "Email me at [[EMAIL:riya.k@example.com]] today."
+  },
+  {
+    "id": "email-02",
+    "group": "dev",
+    "text": "Send it to [[EMAIL:amit+test@example.co.in]], thanks."
+  },
+  {
+    "id": "email-03",
+    "group": "dev",
+    "text": "Contact: [[EMAIL:support_team@mail.example.org]]."
+  },
+  {
+    "id": "pan-01",
+    "group": "dev",
+    "text": "My PAN is [[PAN:ABCPE1234F]] for the form."
+  },
+  {
+    "id": "pan-02",
+    "group": "dev",
+    "text": "PAN card number [[PAN:FGHCK5678L]]."
+  },
+  {
+    "id": "pan-03",
+    "group": "dev",
+    "text": "Repeated [[PAN:ABCPE1234F]] and again [[PAN:ABCPE1234F]]."
+  },
+  { "id": "pan-04", "group": "dev", "text": "Company PAN [[PAN:AAACB1234C]]." },
+  {
+    "id": "aadhaar-01",
+    "group": "dev",
+    "text": "Aadhaar [[AADHAAR:gen:23456789012]] is attached."
+  },
+  {
+    "id": "aadhaar-02",
+    "group": "dev",
+    "text": "Aadhaar [[AADHAAR:gen:49876543210~spaced]] is attached."
+  },
+  {
+    "id": "aadhaar-03",
+    "group": "dev",
+    "text": "UID [[AADHAAR:gen:67890123456~hyphen]]"
+  },
+  {
+    "id": "aadhaar-04",
+    "group": "dev",
+    "text": "Mera aadhaar [[AADHAAR:gen:34567890123]] hai."
+  },
+  {
+    "id": "aadhaar-05",
+    "group": "dev",
+    "text": "आधार [[AADHAAR:gen:56789012345~spaced~deva]] है"
+  },
+  {
+    "id": "ifsc-01",
+    "group": "dev",
+    "text": "IFSC [[IFSC:SBIN0001234]] branch."
+  },
+  {
+    "id": "ifsc-02",
+    "group": "dev",
+    "text": "Transfer to [[IFSC:HDFC0004567]]."
+  },
+  {
+    "id": "upi-01",
+    "group": "dev",
+    "text": "Pay to [[UPI:riya@oksbi]] please."
+  },
+  { "id": "upi-02", "group": "dev", "text": "UPI id [[UPI:amit.k@okaxis]]" },
+  { "id": "upi-03", "group": "dev", "text": "UPI [[UPI:9876543210@ybl]]" },
+  { "id": "pin-01", "group": "dev", "text": "Pincode [[PINCODE:411001]]" },
+  { "id": "pin-02", "group": "dev", "text": "pin: [[PINCODE:400001]]" },
+  { "id": "pin-03", "group": "dev", "text": "पिन [[PINCODE:411028]]" },
+  {
+    "id": "voter-01",
+    "group": "dev",
+    "text": "Voter ID [[VOTER_ID:ABC1234567]]"
+  },
+  {
+    "id": "voter-02",
+    "group": "dev",
+    "text": "EPIC number [[VOTER_ID:XYZ9876543]]"
+  },
+  {
+    "id": "passport-01",
+    "group": "dev",
+    "text": "Passport [[PASSPORT:A1234567]]"
+  },
+  {
+    "id": "passport-02",
+    "group": "dev",
+    "text": "Passport no [[PASSPORT:K8765432]]"
+  },
+  {
+    "id": "mix-01",
+    "group": "dev",
+    "text": "Mera naam Riya hai. Mobile [[PHONE:9876543210~deva]], email [[EMAIL:riya@example.com]], Aadhaar [[AADHAAR:gen:49876543210~spaced]], PAN [[PAN:ABCPE1234F]], IFSC [[IFSC:ABCD0123456]], UPI [[UPI:riya@oksbi]], pin [[PINCODE:411001]], voter [[VOTER_ID:ABC1234567]], passport [[PASSPORT:A1234567]]."
+  },
+  {
+    "id": "mix-02",
+    "group": "dev",
+    "text": "Form: phone [[PHONE:9876543210]], email [[EMAIL:riya@example.com]], PAN [[PAN:ABCPE1234F]], Aadhaar [[AADHAAR:gen:49876543210~spaced]]."
+  },
+  {
+    "id": "mix-03",
+    "group": "dev",
+    "text": "Bhai mera number [[PHONE:9123456780]] hai aur PAN [[PAN:BNZPA2345D]], save kar le."
+  },
+  {
+    "id": "neg-01",
+    "group": "dev",
+    "text": "Order ID [[RAW:bad:23456789012]] has shipped."
+  },
+  {
+    "id": "neg-02",
+    "group": "dev",
+    "text": "Reference 1234567890 for your ticket."
+  },
+  {
+    "id": "neg-03",
+    "group": "dev",
+    "text": "Code 5123456789 expires tomorrow."
+  },
+  {
+    "id": "neg-04",
+    "group": "dev",
+    "text": "Tracking number 98765432101234 is in transit."
+  },
+  { "id": "neg-05", "group": "dev", "text": "The id abcpe1234f is not a PAN." },
+  {
+    "id": "neg-06",
+    "group": "dev",
+    "text": "Serial ABCXE1234F is a part number."
+  },
+  {
+    "id": "neg-07",
+    "group": "dev",
+    "text": "Helpline 1800 123 4567 is toll free."
+  },
+  { "id": "neg-08", "group": "dev", "text": "Total amount is 400001 rupees." },
+  {
+    "id": "neg-09",
+    "group": "dev",
+    "text": "Account balance 123456789012 after tax."
+  },
+  {
+    "id": "neg-10",
+    "group": "dev",
+    "text": "Code ABCD1123456 is a product code."
+  },
+  { "id": "neg-11", "group": "dev", "text": "Item Q1234567 is out of stock." },
+  {
+    "id": "neg-12",
+    "group": "dev",
+    "text": "Connect to user@localhost for testing."
+  },
+  {
+    "id": "neg-13",
+    "group": "dev",
+    "text": "Explain how compound interest works with a simple example."
+  },
+  {
+    "id": "neg-14",
+    "group": "dev",
+    "text": "Meeting on 12-10-2026 at 18:07, room 4B."
+  },
+  { "id": "neg-15", "group": "dev", "text": "Pay Rs 98765432 by Friday." },
+  { "id": "neg-16", "group": "dev", "text": "Version 2.3.4567890 released." },
+  {
+    "id": "neg-17",
+    "group": "dev",
+    "text": "Hello! What is the capital of India?"
+  },
+  {
+    "id": "neg-18",
+    "group": "dev",
+    "text": "Bad checksum Aadhaar-like [[RAW:bad:49876543210~spaced]] should be ignored."
+  },
+  {
+    "id": "neg-19",
+    "group": "dev",
+    "text": "Number 0123456789 starts with zero."
+  },
+  {
+    "id": "neg-20",
+    "group": "dev",
+    "text": "Reference ABC12345678 is too long to be an ID."
+  },
+  {
+    "id": "neg-21-known-limit",
+    "group": "dev",
+    "text": "Invoice 9988776655 is overdue."
+  },
+  {
+    "id": "h-01",
+    "group": "holdout",
+    "text": "bhai mera number [[PHONE:9123456780]] save kar le, email [[EMAIL:rohit_s99@example.in]] pe bhej dena"
+  },
+  {
+    "id": "h-02",
+    "group": "holdout",
+    "text": "KYC pending. PAN: [[PAN:BNZPA2345D]] | Aadhaar: [[AADHAAR:gen:78901234567~spaced]] | Mobile: [[PHONE:+91 91234 56780]]"
+  },
+  {
+    "id": "h-03",
+    "group": "holdout",
+    "text": "Send 500 rupees to [[UPI:rohit.s@okicici]] (IFSC [[IFSC:ICIC0000123]])"
+  },
+  {
+    "id": "h-04",
+    "group": "holdout",
+    "text": "Address pin [[PINCODE:560001]], passport [[PASSPORT:M1234567]], voter [[VOTER_ID:DEF7654321]]"
+  },
+  {
+    "id": "h-05",
+    "group": "holdout",
+    "text": "मेरा आधार [[AADHAAR:gen:89012345678~deva]] और मोबाइल [[PHONE:7890123456~deva]] है"
+  },
+  {
+    "id": "h-06",
+    "group": "holdout",
+    "text": "Support ticket 99887766 closed on 2026-10-24."
+  },
+  {
+    "id": "h-07",
+    "group": "holdout",
+    "text": "Quarterly revenue grew 12% to 4,56,78,900 rupees."
+  },
+  {
+    "id": "h-08",
+    "group": "holdout",
+    "text": "She said her PAN was [[PAN:CDEHF4321G]], and Aadhaar [[AADHAAR:gen:90123456789]]."
+  },
+  {
+    "id": "h-09",
+    "group": "holdout",
+    "text": "Order [[RAW:bad:61234567890]] versus real [[AADHAAR:gen:61234567890]]."
+  },
+  {
+    "id": "h-10",
+    "group": "holdout",
+    "text": "Write a poem about monsoon in Pune."
+  },
+  {
+    "id": "h-11",
+    "group": "holdout",
+    "text": "Email [[EMAIL:a.b-c@sub.example.com]], phone [[PHONE:6234567890]]"
+  },
+  {
+    "id": "h-12",
+    "group": "holdout",
+    "text": "GST invoice no INV-2026-0098 dated 24/10/2026."
+  },
+  {
+    "id": "h-13",
+    "group": "holdout",
+    "text": "Order tracking 9812345670 is delayed."
+  }
+]
