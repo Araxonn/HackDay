@@ -154,6 +154,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       backdrop.querySelector('#ss-preview-text').textContent = redactedText;
 
       root.appendChild(backdrop);
+      backdrop.style.pointerEvents = 'auto';
 
       // Focus trapping & keyboard listeners
       const sendBtn = backdrop.querySelector('#ss-btn-send');
@@ -168,6 +169,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         document.removeEventListener('keydown', onKeyDown, true);
         if (backdrop.parentNode) {
           backdrop.parentNode.removeChild(backdrop);
+        }
+        if (hostEl) {
+          hostEl.style.pointerEvents = 'none';
         }
         if (previousActiveEl && typeof previousActiveEl.focus === 'function') {
           previousActiveEl.focus();
@@ -204,10 +208,26 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
       document.addEventListener('keydown', onKeyDown, true);
 
-      sendBtn.addEventListener('click', () => cleanup('send'));
-      restoreBtn.addEventListener('click', () => cleanup('restore'));
-      cancelBtn.addEventListener('click', () => cleanup('cancel'));
-      closeX.addEventListener('click', () => cleanup('cancel'));
+      sendBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('send');
+      });
+      restoreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('restore');
+      });
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('cancel');
+      });
+      closeX.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('cancel');
+      });
     });
   }
 

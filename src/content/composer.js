@@ -91,11 +91,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     }
   }
 
-  function submit(adapter) {
+  function submit(adapter, composerEl) {
     if (!adapter || typeof adapter.findSendButton !== 'function') {
       return false;
     }
-    const btn = adapter.findSendButton();
+    const btn = adapter.findSendButton(
+      typeof document !== 'undefined' ? document : null,
+      composerEl,
+    );
     if (!btn || btn.disabled || btn.getAttribute('aria-disabled') === 'true') {
       return false;
     }

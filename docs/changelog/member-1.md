@@ -192,3 +192,15 @@
 **Decisions:** none
 **Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.
 **Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.
+
+## M1-016 | 2026-10-25 07:38 | address_detection
+**Prompt:** fix: prevent redacted modal click-through
+**What changed:**
+- Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.
+- Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page.
+**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.
+**Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.

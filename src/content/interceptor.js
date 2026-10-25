@@ -146,14 +146,17 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     handleSubmission(e, composerEl, adapter);
   }
 
-  function submitRedacted(composer, adapter) {
+  function submitRedacted(composer, adapter, composerEl) {
     if (composer && typeof composer.submit === 'function') {
-      if (composer.submit(adapter)) return true;
+      if (composer.submit(adapter, composerEl)) return true;
     }
 
     const button =
       adapter && typeof adapter.findSendButton === 'function'
-        ? adapter.findSendButton()
+        ? adapter.findSendButton(
+            typeof document !== 'undefined' ? document : null,
+            composerEl,
+          )
         : null;
     if (
       button &&
@@ -377,7 +380,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         // Submit redacted prompt
         isBypassing = true;
         try {
-          const submitted = submitRedacted(composer, adapter);
+          const submitted = submitRedacted(composer, adapter, composerEl);
           if (!submitted && typeof KeyboardEvent !== 'undefined') {
             // Fallback dispatching Enter key on composer
             const enterEvt = new KeyboardEvent('keydown', {
@@ -487,7 +490,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     document.addEventListener(
       'click',
       (e) => {
-        const sendBtn = adapter ? adapter.findSendButton() : null;
+        const sendBtn = adapter
+          ? adapter.findSendButton(document, composerEl)
+          : null;
         if (sendBtn && (e.target === sendBtn || sendBtn.contains(e.target))) {
           interceptSubmission(e, composerEl, adapter);
         }

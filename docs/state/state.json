@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-10-25 07:35",
+  "generatedAt": "2026-10-25 07:38",
   "git": {
     "branch": "address_detection",
-    "shortHead": "8fc7f3f",
+    "shortHead": "6d6d722",
     "lastSubjects": [
+      "fix: make Send redacted submit reliably",
       "fix: block original prompt before async redaction",
       "fix: add address detection fallback",
       "feat: add evaluation script for detect() accuracy against dataset",
-      "feat: add README for accuracy evaluation of personal data detection",
-      "feat: add initial dataset for phone, email, PAN, Aadhaar, and other identifiers"
+      "feat: add README for accuracy evaluation of personal data detection"
     ],
-    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/state.json, docs/state/tasks.json, src/content/interceptor.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/state.json, docs/state/tasks.json, src/content/composer.js, src/content/interceptor.js, src/content/main.js, src/ui/overlay/preview-modal.js"
   },
   "project": "## Overview\r\n\r\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\r\n\r\n## Problem statement\r\n\r\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\r\n\r\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\r\n\r\n## Requirements\r\n\r\nCore features:\r\n\r\n- Automatic PII detection.\r\n- Smart redaction with stable, typed placeholders.\r\n- Pre-submission protection before text leaves the page.\r\n- Privacy shield toggle.\r\n- Detection preview before sending.\r\n- Local restoration of original text.\r\n- Privacy dashboard with counts only.\r\n- Indian language support, including Hindi/Hinglish where feasible.\r\n- Clean, modern UI.\r\n\r\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\r\n\r\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\r\n\r\n## Privacy rules\r\n\r\n- All detection runs locally.\r\n- Never send unredacted text to any external service.\r\n- Fail closed: if detection or redaction throws, block the send and warn the user.\r\n- Show “Active” only if the composer is found and interception hooks are attached.\r\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\r\n- Persist dashboard counts only, never detected values.\r\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\r\n\r\n## Tech stack\r\n\r\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\r\n\r\n## Architecture and data flow\r\n\r\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\r\n\r\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\r\n\r\n## Contracts\r\n\r\n- `detect(text) -> [{ type, start, end, value }]`\r\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\r\n- `restore(text, entities) -> string`\r\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\r\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\r\n\r\n## Ownership map\r\n\r\n- M1: detection engine (`src/core`) and tests.\r\n- M2: platform integration (`src/content`).\r\n- M3: UI/UX (`src/ui`) and assets.\r\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\r\n\r\n## Conventions\r\n\r\n- Branch names: `feat/<member>-<task>`.\r\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\r\n- Keep pull requests small.\r\n- Review pairing: M1 <-> M2 and M3 <-> M4.\r\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\r\n\r\n## Open questions\r\n\r\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
@@ -110,8 +110,8 @@
           "src/content/interceptor.js",
           "src/content/main.js"
         ],
-        "updated": "2026-10-25 07:35",
-        "note": "Controlled redacted submission now has an explicit retry and failure warning."
+        "updated": "2026-10-25 07:38",
+        "note": "Send redacted now consumes modal clicks before host-page handling."
       },
       {
         "id": "T1-09",
@@ -140,8 +140,8 @@
           "src/ui/overlay/preview-modal.js",
           "src/ui/overlay/preview-modal.css"
         ],
-        "updated": "2026-10-25 07:35",
-        "note": "Send redacted now retries the live adapter button and reports unavailable-button failures."
+        "updated": "2026-10-25 07:38",
+        "note": "Scoped send-button lookup to the active composer and blocked modal click-through."
       },
       {
         "id": "T2-03",
@@ -515,27 +515,27 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M1-015",
+      "id": "M1-016",
       "member": 1,
-      "sequence": 15,
-      "timestamp": "2026-10-25 07:35",
+      "sequence": 16,
+      "timestamp": "2026-10-25 07:38",
       "branch": "address_detection",
-      "heading": "## M1-015 | 2026-10-25 07:35 | address_detection",
-      "line": 184,
+      "heading": "## M1-016 | 2026-10-25 07:38 | address_detection",
+      "line": 196,
       "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
-      "full": "## M1-015 | 2026-10-25 07:35 | address_detection\n**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
-      "prompt": "fix: make Send redacted submit reliably",
+      "body": "**Prompt:** fix: prevent redacted modal click-through\n**What changed:**\n- Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.\n- Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.\n**Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.",
+      "full": "## M1-016 | 2026-10-25 07:38 | address_detection\n**Prompt:** fix: prevent redacted modal click-through\n**What changed:**\n- Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.\n- Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.\n**Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.",
+      "prompt": "fix: prevent redacted modal click-through",
       "changes": [
-        "Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.",
-        "Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently."
+        "Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.",
+        "Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page."
       ],
-      "files": "`src/content/interceptor.js` (modified)",
+      "files": "`src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)",
       "status": "in review",
       "tasks": "T1-11, T1-08",
       "decisions": "none",
-      "notes": "Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.",
-      "next": "Open the preview, click Send redacted, and confirm the redacted prompt is submitted once."
+      "notes": "The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.",
+      "next": "Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away."
     },
     {
       "id": "M2-003",
@@ -609,6 +609,29 @@
     }
   ],
   "recentActivity": [
+    {
+      "id": "M1-016",
+      "member": 1,
+      "sequence": 16,
+      "timestamp": "2026-10-25 07:38",
+      "branch": "address_detection",
+      "heading": "## M1-016 | 2026-10-25 07:38 | address_detection",
+      "line": 196,
+      "file": "docs/changelog/member-1.md",
+      "body": "**Prompt:** fix: prevent redacted modal click-through\n**What changed:**\n- Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.\n- Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.\n**Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.",
+      "full": "## M1-016 | 2026-10-25 07:38 | address_detection\n**Prompt:** fix: prevent redacted modal click-through\n**What changed:**\n- Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.\n- Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.\n**Next:** Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away.",
+      "prompt": "fix: prevent redacted modal click-through",
+      "changes": [
+        "Passed the active composer element into send-button lookup so the adapter submits through the correct ChatGPT composer instead of a page-level match.",
+        "Made modal controls consume click events and enabled pointer handling on the modal backdrop so clicks cannot fall through to the host page."
+      ],
+      "files": "`src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified), `src/ui/overlay/preview-modal.js` (modified)",
+      "status": "in review",
+      "tasks": "T1-11, T1-08",
+      "decisions": "none",
+      "notes": "The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing.",
+      "next": "Send `Contact support at +91 98765 43210.` and verify only the redacted prompt is submitted without navigating away."
+    },
     {
       "id": "M1-015",
       "member": 1,
@@ -942,31 +965,14 @@
       "decisions": "none",
       "notes": "Address classification still requires a running local Ollama instance with the configured model. This machine has no `ollama` executable, so live address detection could not be exercised here. The existing design intentionally falls back to regex-only detection when Gemma is unavailable.",
       "next": "Install/start Ollama, pull the configured model, enable Local AI Assist, and verify an address prompt shows the existing preview modal."
-    },
-    {
-      "id": "M4-006",
-      "member": 4,
-      "sequence": 6,
-      "timestamp": "2026-10-25 04:53",
-      "branch": "feat/solo-build",
-      "heading": "## M4-006 | 2026-10-25 04:53 | feat/solo-build",
-      "line": 84,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
-      "full": "## M4-006 | 2026-10-25 04:53 | feat/solo-build\n**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
-      "prompt": "Publishing combined feature branch changes",
-      "changes": [
-        "<summarize each change>"
-      ],
-      "files": "<path> (added|modified|deleted)",
-      "status": "in review",
-      "tasks": "none",
-      "decisions": "none",
-      "notes": "none",
-      "next": "<one concrete next step>"
     }
   ],
   "openHandoffs": [
+    {
+      "id": "M1-016",
+      "member": 1,
+      "notes": "The Chariot redirect was caused by the modal click reaching an underlying page control. Reload the extension and refresh ChatGPT before testing."
+    },
     {
       "id": "M1-015",
       "member": 1,
@@ -1302,15 +1308,15 @@
     },
     {
       "path": "src/content/composer.js",
-      "classification": "implemented (111 lines)"
+      "classification": "implemented (114 lines)"
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (508 lines)"
+      "classification": "implemented (513 lines)"
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (273 lines)"
+      "classification": "implemented (276 lines)"
     },
     {
       "path": "src/core/detector.js",
@@ -1362,7 +1368,7 @@
     },
     {
       "path": "src/ui/overlay/preview-modal.js",
-      "classification": "implemented (255 lines)"
+      "classification": "implemented (275 lines)"
     },
     {
       "path": "src/ui/popup/popup.css",

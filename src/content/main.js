@@ -130,10 +130,13 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   // Ensure fail-closed if Enter intercepted but no way to submit
   if (SafeShield.composer && typeof SafeShield.composer.submit === 'function') {
     const origSubmit = SafeShield.composer.submit;
-    SafeShield.composer.submit = function (ad) {
+    SafeShield.composer.submit = function (ad, composerEl) {
       const btn =
         ad && typeof ad.findSendButton === 'function'
-          ? ad.findSendButton()
+          ? ad.findSendButton(
+              typeof document !== 'undefined' ? document : null,
+              composerEl,
+            )
           : null;
       if (
         !btn ||
@@ -148,7 +151,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         }
         return false;
       }
-      return origSubmit.call(this, ad);
+      return origSubmit.call(this, ad, composerEl);
     };
   }
 
@@ -246,7 +249,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           }).then((result) => {
             const action = result ? result.action : 'cancel';
             if (action === 'send' && SafeShield.composer && SafeShield.composer.submit) {
-              SafeShield.composer.submit(adapter);
+              SafeShield.composer.submit(adapter, composerEl);
             } else if (action === 'restore' && composer && typeof composer.setText === 'function') {
               composer.setText(composerEl, text);
             }
