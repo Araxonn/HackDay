@@ -180,3 +180,15 @@
 **Decisions:** none
 **Notes for others:** This fixes the race where ChatGPT submitted original text before Gemma/storage completed. Reload the extension and ChatGPT before live testing.
 **Next:** Type `Contact support at +91 98765 43210.` and press Enter; confirm the original is never submitted and the preview contains `[PHONE_1]`.
+
+## M1-015 | 2026-10-25 07:35 | address_detection
+**Prompt:** fix: make Send redacted submit reliably
+**What changed:**
+- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.
+- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.
+**Files:** `src/content/interceptor.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.
+**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.

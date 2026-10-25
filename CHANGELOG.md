@@ -6,7 +6,7 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 14 |
+| M1 | Detection engine | 15 |
 | M2 | Platform integration | 3 |
 | M3 | UI/UX | 2 |
 | M4 | Foundation, data, and docs | 7 |
@@ -14,6 +14,20 @@
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Detection engine
+
+## M1-015 | 2026-10-25 07:35 | address_detection
+**Prompt:** fix: make Send redacted submit reliably
+**What changed:**
+- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.
+- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.
+**Files:** `src/content/interceptor.js` (modified)
+**Status:** in review
+**Tasks:** T1-11, T1-08
+**Decisions:** none
+**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.
+**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.
 
 **Role:** Detection engine
 

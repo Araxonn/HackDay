@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-25 07:31",
+  "generatedAt": "2026-10-25 07:35",
   "git": {
     "branch": "address_detection",
-    "shortHead": "94b2473",
+    "shortHead": "8fc7f3f",
     "lastSubjects": [
+      "fix: block original prompt before async redaction",
       "fix: add address detection fallback",
       "feat: add evaluation script for detect() accuracy against dataset",
       "feat: add README for accuracy evaluation of personal data detection",
-      "feat: add initial dataset for phone, email, PAN, Aadhaar, and other identifiers",
-      "feat: complete SafeShield implementation"
+      "feat: add initial dataset for phone, email, PAN, Aadhaar, and other identifiers"
     ],
-    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/state.json, docs/state/tasks.json, src/content/interceptor.js, tests/qa-behaviour.test.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-1.md, docs/state/state.json, docs/state/tasks.json, src/content/interceptor.js"
   },
   "project": "## Overview\r\n\r\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\r\n\r\n## Problem statement\r\n\r\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\r\n\r\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\r\n\r\n## Requirements\r\n\r\nCore features:\r\n\r\n- Automatic PII detection.\r\n- Smart redaction with stable, typed placeholders.\r\n- Pre-submission protection before text leaves the page.\r\n- Privacy shield toggle.\r\n- Detection preview before sending.\r\n- Local restoration of original text.\r\n- Privacy dashboard with counts only.\r\n- Indian language support, including Hindi/Hinglish where feasible.\r\n- Clean, modern UI.\r\n\r\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\r\n\r\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\r\n\r\n## Privacy rules\r\n\r\n- All detection runs locally.\r\n- Never send unredacted text to any external service.\r\n- Fail closed: if detection or redaction throws, block the send and warn the user.\r\n- Show “Active” only if the composer is found and interception hooks are attached.\r\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\r\n- Persist dashboard counts only, never detected values.\r\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\r\n\r\n## Tech stack\r\n\r\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\r\n\r\n## Architecture and data flow\r\n\r\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\r\n\r\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\r\n\r\n## Contracts\r\n\r\n- `detect(text) -> [{ type, start, end, value }]`\r\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\r\n- `restore(text, entities) -> string`\r\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\r\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\r\n\r\n## Ownership map\r\n\r\n- M1: detection engine (`src/core`) and tests.\r\n- M2: platform integration (`src/content`).\r\n- M3: UI/UX (`src/ui`) and assets.\r\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\r\n\r\n## Conventions\r\n\r\n- Branch names: `feat/<member>-<task>`.\r\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\r\n- Keep pull requests small.\r\n- Review pairing: M1 <-> M2 and M3 <-> M4.\r\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\r\n\r\n## Open questions\r\n\r\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
         "total": 16,
-        "done": 4
+        "done": 3
       },
       "2": {
         "total": 6,
@@ -39,14 +39,14 @@
       },
       "M3": {
         "total": 5,
-        "done": 2
+        "done": 1
       },
       "M4": {
         "total": 7,
         "done": 1
       }
     },
-    "tierOnePercent": 25
+    "tierOnePercent": 19
   },
   "tasks": {
     "Done": [
@@ -80,20 +80,6 @@
         "note": "Popup decides page support solely from SS_GET_STATUS reply"
       },
       {
-        "id": "T1-11",
-        "tier": 1,
-        "owner": "M3",
-        "title": "Detection preview modal (Shadow DOM) with Send redacted / Cancel",
-        "status": "done",
-        "deps": [],
-        "files": [
-          "src/ui/overlay/preview-modal.js",
-          "src/ui/overlay/preview-modal.css"
-        ],
-        "updated": "2026-10-25 03:16",
-        "note": "Send Redacted button added to popup UI; content script SS_SEND_REDACTED handler still needed (M2)"
-      },
-      {
         "id": "T1-16",
         "tier": 1,
         "owner": "M4",
@@ -124,8 +110,8 @@
           "src/content/interceptor.js",
           "src/content/main.js"
         ],
-        "updated": "2026-10-25 07:31",
-        "note": "Submission listeners now synchronously block before async redaction/classification."
+        "updated": "2026-10-25 07:35",
+        "note": "Controlled redacted submission now has an explicit retry and failure warning."
       },
       {
         "id": "T1-09",
@@ -142,6 +128,20 @@
         ],
         "updated": "2026-10-25 07:31",
         "note": "Original prompts cannot pass through while SafeShield awaits Gemma or storage."
+      },
+      {
+        "id": "T1-11",
+        "tier": 1,
+        "owner": "M3",
+        "title": "Detection preview modal (Shadow DOM) with Send redacted / Cancel",
+        "status": "in_review",
+        "deps": [],
+        "files": [
+          "src/ui/overlay/preview-modal.js",
+          "src/ui/overlay/preview-modal.css"
+        ],
+        "updated": "2026-10-25 07:35",
+        "note": "Send redacted now retries the live adapter button and reports unavailable-button failures."
       },
       {
         "id": "T2-03",
@@ -515,28 +515,27 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M1-014",
+      "id": "M1-015",
       "member": 1,
-      "sequence": 14,
-      "timestamp": "2026-10-25 07:31",
+      "sequence": 15,
+      "timestamp": "2026-10-25 07:35",
       "branch": "address_detection",
-      "heading": "## M1-014 | 2026-10-25 07:31 | address_detection",
-      "line": 171,
+      "heading": "## M1-015 | 2026-10-25 07:35 | address_detection",
+      "line": 184,
       "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: block original prompt before async redaction\n**What changed:**\n- Added a synchronous submission gate in the keydown and send-click listeners before storage or Gemma awaits.\n- Clean prompts are released through SafeShield’s submit path; detected prompts remain blocked until redaction and preview complete.\n- Added regression coverage proving the original phone-containing prompt is not submitted during asynchronous classification.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T1-08, T1-09, T3-01\n**Decisions:** none\n**Notes for others:** This fixes the race where ChatGPT submitted original text before Gemma/storage completed. Reload the extension and ChatGPT before live testing.\n**Next:** Type `Contact support at +91 98765 43210.` and press Enter; confirm the original is never submitted and the preview contains `[PHONE_1]`.",
-      "full": "## M1-014 | 2026-10-25 07:31 | address_detection\n**Prompt:** fix: block original prompt before async redaction\n**What changed:**\n- Added a synchronous submission gate in the keydown and send-click listeners before storage or Gemma awaits.\n- Clean prompts are released through SafeShield’s submit path; detected prompts remain blocked until redaction and preview complete.\n- Added regression coverage proving the original phone-containing prompt is not submitted during asynchronous classification.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T1-08, T1-09, T3-01\n**Decisions:** none\n**Notes for others:** This fixes the race where ChatGPT submitted original text before Gemma/storage completed. Reload the extension and ChatGPT before live testing.\n**Next:** Type `Contact support at +91 98765 43210.` and press Enter; confirm the original is never submitted and the preview contains `[PHONE_1]`.",
-      "prompt": "fix: block original prompt before async redaction",
+      "body": "**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
+      "full": "## M1-015 | 2026-10-25 07:35 | address_detection\n**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
+      "prompt": "fix: make Send redacted submit reliably",
       "changes": [
-        "Added a synchronous submission gate in the keydown and send-click listeners before storage or Gemma awaits.",
-        "Clean prompts are released through SafeShield’s submit path; detected prompts remain blocked until redaction and preview complete.",
-        "Added regression coverage proving the original phone-containing prompt is not submitted during asynchronous classification."
+        "Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.",
+        "Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently."
       ],
-      "files": "`src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)",
+      "files": "`src/content/interceptor.js` (modified)",
       "status": "in review",
-      "tasks": "T1-08, T1-09, T3-01",
+      "tasks": "T1-11, T1-08",
       "decisions": "none",
-      "notes": "This fixes the race where ChatGPT submitted original text before Gemma/storage completed. Reload the extension and ChatGPT before live testing.",
-      "next": "Type `Contact support at +91 98765 43210.` and press Enter; confirm the original is never submitted and the preview contains `[PHONE_1]`."
+      "notes": "Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.",
+      "next": "Open the preview, click Send redacted, and confirm the redacted prompt is submitted once."
     },
     {
       "id": "M2-003",
@@ -610,6 +609,29 @@
     }
   ],
   "recentActivity": [
+    {
+      "id": "M1-015",
+      "member": 1,
+      "sequence": 15,
+      "timestamp": "2026-10-25 07:35",
+      "branch": "address_detection",
+      "heading": "## M1-015 | 2026-10-25 07:35 | address_detection",
+      "line": 184,
+      "file": "docs/changelog/member-1.md",
+      "body": "**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
+      "full": "## M1-015 | 2026-10-25 07:35 | address_detection\n**Prompt:** fix: make Send redacted submit reliably\n**What changed:**\n- Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.\n- Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** in review\n**Tasks:** T1-11, T1-08\n**Decisions:** none\n**Notes for others:** Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.\n**Next:** Open the preview, click Send redacted, and confirm the redacted prompt is submitted once.",
+      "prompt": "fix: make Send redacted submit reliably",
+      "changes": [
+        "Added a shared redacted-submit helper that retries the current adapter send button when the composer submit helper returns false.",
+        "Send redacted now reports a visible warning when ChatGPT has no usable send button instead of failing silently."
+      ],
+      "files": "`src/content/interceptor.js` (modified)",
+      "status": "in review",
+      "tasks": "T1-11, T1-08",
+      "decisions": "none",
+      "notes": "Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`.",
+      "next": "Open the preview, click Send redacted, and confirm the redacted prompt is submitted once."
+    },
     {
       "id": "M1-014",
       "member": 1,
@@ -942,32 +964,14 @@
       "decisions": "none",
       "notes": "none",
       "next": "<one concrete next step>"
-    },
-    {
-      "id": "M4-006",
-      "member": 4,
-      "sequence": 6,
-      "timestamp": "2026-10-25 04:52",
-      "branch": "feat/solo-build",
-      "heading": "## M4-006 | 2026-10-25 04:52 | feat/solo-build",
-      "line": 72,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Publish all current changes together rather than splitting them by member.\n**What changed:**\n- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.\n- Ran the project test suite successfully before preparing the publication.\n**Files:** `docs/changelog/member-4.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.\n**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.",
-      "full": "## M4-006 | 2026-10-25 04:52 | feat/solo-build\n**Prompt:** Publish all current changes together rather than splitting them by member.\n**What changed:**\n- Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.\n- Ran the project test suite successfully before preparing the publication.\n**Files:** `docs/changelog/member-4.md` (modified)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.\n**Next:** Commit the complete change set and push `feat/solo-build` for a pull request into `main`.",
-      "prompt": "Publish all current changes together rather than splitting them by member.",
-      "changes": [
-        "Prepared one combined commit containing the complete staged feature branch changes across the project's ownership areas.",
-        "Ran the project test suite successfully before preparing the publication."
-      ],
-      "files": "`docs/changelog/member-4.md` (modified)",
-      "status": "in review",
-      "tasks": "none",
-      "decisions": "none",
-      "notes": "All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`.",
-      "next": "Commit the complete change set and push `feat/solo-build` for a pull request into `main`."
     }
   ],
   "openHandoffs": [
+    {
+      "id": "M1-015",
+      "member": 1,
+      "notes": "Reload SafeShield and ChatGPT before testing. A failed live submit now displays `Send blocked: ChatGPT send button is unavailable.`."
+    },
     {
       "id": "M1-014",
       "member": 1,
@@ -1302,7 +1306,7 @@
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (487 lines)"
+      "classification": "implemented (508 lines)"
     },
     {
       "path": "src/content/main.js",

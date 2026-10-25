@@ -146,6 +146,27 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     handleSubmission(e, composerEl, adapter);
   }
 
+  function submitRedacted(composer, adapter) {
+    if (composer && typeof composer.submit === 'function') {
+      if (composer.submit(adapter)) return true;
+    }
+
+    const button =
+      adapter && typeof adapter.findSendButton === 'function'
+        ? adapter.findSendButton()
+        : null;
+    if (
+      button &&
+      !button.disabled &&
+      button.getAttribute('aria-disabled') !== 'true' &&
+      typeof button.click === 'function'
+    ) {
+      button.click();
+      return true;
+    }
+    return false;
+  }
+
   async function handleSubmission(e, composerEl, adapter) {
     if (isBypassing) {
       return;
@@ -356,10 +377,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         // Submit redacted prompt
         isBypassing = true;
         try {
-          let submitted = false;
-          if (composer && typeof composer.submit === 'function') {
-            submitted = composer.submit(adapter);
-          }
+          const submitted = submitRedacted(composer, adapter);
           if (!submitted && typeof KeyboardEvent !== 'undefined') {
             // Fallback dispatching Enter key on composer
             const enterEvt = new KeyboardEvent('keydown', {
@@ -371,6 +389,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
               cancelable: true,
             });
             composerEl.dispatchEvent(enterEvt);
+          }
+          if (!submitted && modal && typeof modal.warn === 'function') {
+            modal.warn('Send blocked: ChatGPT send button is unavailable.');
           }
         } finally {
           setTimeout(() => {
