@@ -68,6 +68,30 @@ test('classify with injected fake fetch: successful classification', async () =>
   assert.equal(result.spans[1].text, 'Aarav Gupta');
 });
 
+test('classify accepts fenced JSON containing an address span', async () => {
+  const fakeFetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      message: {
+        content:
+          '```json\n{"spans":[{"type":"ADDRESS","text":"42 Green Park Lane"}]}\n```',
+      },
+    }),
+  });
+
+  const result = await gemma.classify(
+    'Deliver the file to 42 Green Park Lane today.',
+    {},
+    fakeFetch,
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    spans: [{ type: 'ADDRESS', text: '42 Green Park Lane' }],
+  });
+});
+
 test('classify error mappings: timeout, 404 model-missing, 403 forbidden', async () => {
   // 404 model missing
   const fetch404 = async () => ({ ok: false, status: 404 });

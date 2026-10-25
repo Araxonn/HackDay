@@ -224,6 +224,22 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       }
     }
 
+    // Conservative local address fallback. Gemma can still provide richer
+    // name/address classification when enabled, but must not be required for
+    // an obvious numbered street address.
+    if (patterns.ADDRESS) {
+      const regex = new RegExp(patterns.ADDRESS.source, patterns.ADDRESS.flags);
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        candidates.push({
+          type: PII_TYPES.ADDRESS || 'ADDRESS',
+          start: match.index,
+          end: match.index + match[0].length,
+          priority: 3,
+        });
+      }
+    }
+
     if (candidates.length === 0) {
       return [];
     }

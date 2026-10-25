@@ -42,6 +42,11 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     // GSTIN: 15 alphanumeric characters (2 state digits + PAN + 1 + Z + check)
     GSTIN:
       /\b[0-3][0-9][A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]\b/g,
+
+    // Conservative postal address fallback: a street number followed by a
+    // recognized street/locality keyword and optional comma-separated locality.
+    ADDRESS:
+      /(?<!\w)\d{1,5}(?:[-/]\d{1,5})?(?:\s+[A-Za-z][\w.'-]*){0,8}\s+(?:road|rd|street|st|lane|marg|nagar|colony|society|avenue|sector|layout|park|circle|vihar|extension|enclave|residency|apartment|apt|building|bldg)\b(?:,\s*[^.\n,]{2,40}){0,3}/gi,
   };
 
   SafeShield.patterns = PATTERNS;
