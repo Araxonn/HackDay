@@ -123,6 +123,29 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     });
   }
 
+  function interceptSubmission(e, composerEl, adapter) {
+    if (isBypassing || !isEnabled) return;
+
+    const composer = SafeShield.composer;
+    try {
+      const composerText = composer
+        ? composer.getText(composerEl)
+        : '';
+      if (!composerText || !composerText.trim()) {
+        return;
+      }
+    } catch {
+      handleSubmission(e, composerEl, adapter);
+      return;
+    }
+
+    // This must happen before calling the async handler. Otherwise ChatGPT's
+    // default action can submit the original prompt while Gemma is awaited.
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    handleSubmission(e, composerEl, adapter);
+  }
+
   async function handleSubmission(e, composerEl, adapter) {
     if (isBypassing) {
       return;
@@ -252,6 +275,18 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     // If neither regex nor AI found entities, allow submission to proceed untouched
     if (!entities || entities.length === 0) {
+      if (e.defaultPrevented) {
+        isBypassing = true;
+        try {
+          if (composer && typeof composer.submit === 'function') {
+            composer.submit(adapter);
+          }
+        } finally {
+          setTimeout(() => {
+            isBypassing = false;
+          }, 60);
+        }
+      }
       return;
     }
 
@@ -382,7 +417,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           !e.altKey &&
           !e.isComposing
         ) {
-          handleSubmission(e, composerEl, adapter);
+          interceptSubmission(e, composerEl, adapter);
         }
       },
       true, // Capture phase
@@ -433,7 +468,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       (e) => {
         const sendBtn = adapter ? adapter.findSendButton() : null;
         if (sendBtn && (e.target === sendBtn || sendBtn.contains(e.target))) {
-          handleSubmission(e, composerEl, adapter);
+          interceptSubmission(e, composerEl, adapter);
         }
       },
       true, // Capture phase

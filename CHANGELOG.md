@@ -6,7 +6,7 @@
 
 | Member | Role | Entries |
 | --- | --- | ---: |
-| M1 | Detection engine | 13 |
+| M1 | Detection engine | 14 |
 | M2 | Platform integration | 3 |
 | M3 | UI/UX | 2 |
 | M4 | Foundation, data, and docs | 7 |
@@ -14,6 +14,21 @@
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Detection engine
+
+## M1-014 | 2026-10-25 07:31 | address_detection
+**Prompt:** fix: block original prompt before async redaction
+**What changed:**
+- Added a synchronous submission gate in the keydown and send-click listeners before storage or Gemma awaits.
+- Clean prompts are released through SafeShield’s submit path; detected prompts remain blocked until redaction and preview complete.
+- Added regression coverage proving the original phone-containing prompt is not submitted during asynchronous classification.
+**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)
+**Status:** in review
+**Tasks:** T1-08, T1-09, T3-01
+**Decisions:** none
+**Notes for others:** This fixes the race where ChatGPT submitted original text before Gemma/storage completed. Reload the extension and ChatGPT before live testing.
+**Next:** Type `Contact support at +91 98765 43210.` and press Enter; confirm the original is never submitted and the preview contains `[PHONE_1]`.
 
 **Role:** Detection engine
 

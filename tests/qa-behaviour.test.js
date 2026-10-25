@@ -234,6 +234,38 @@ test('2. Enter with PII: send is paused, text replaced with redacted text, modal
   assert.equal(modalPayload.redactedText.includes('ABCPE1234F'), false);
 });
 
+test('2b. Enter blocks the original prompt before async Gemma/storage work', async () => {
+  const SS = setupSafeShieldEnv();
+  const composerEl = new FakeElement('TEXTAREA', 'Call 9876543210 today.');
+  let submitted = false;
+  SS.composer.submit = () => {
+    submitted = true;
+    return true;
+  };
+  SS.storage.getAiAssist = () =>
+    new Promise((resolve) => setTimeout(() => resolve(true), 10));
+  SS.modal = {
+    show: async () => ({ action: 'cancel' }),
+    warn: () => {},
+  };
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  SS.interceptor.attachHooks(composerEl, adapter);
+  const enterEvt = new FakeEvent('keydown', {
+    key: 'Enter',
+    cancelable: true,
+  });
+  composerEl.dispatchEvent(enterEvt);
+
+  assert.equal(enterEvt.defaultPrevented, true);
+  assert.equal(submitted, false);
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(submitted, false, 'Cancel must never submit the original prompt');
+});
+
 test('2a. AI address detection uses the same preview flow as structured PII', async () => {
   const SS = setupSafeShieldEnv();
   await SS.storage.setAiAssist(true);
