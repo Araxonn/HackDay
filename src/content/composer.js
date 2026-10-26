@@ -37,22 +37,29 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           } else if (typeof el.setSelectionRange === 'function') {
             el.setSelectionRange(0, el.value.length);
           }
-        } else if (
-          typeof window !== 'undefined' &&
-          window.getSelection &&
-          document.createRange
-        ) {
-          const range = document.createRange();
-          range.selectNodeContents(el);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-
-        try {
-          inserted = document.execCommand('insertText', false, text);
-        } catch {
-          inserted = false;
+          try {
+            inserted = document.execCommand('insertText', false, text);
+          } catch {
+            inserted = false;
+          }
+        } else {
+          // For contenteditable ProseMirror: select all contents of el then insertText
+          if (
+            typeof window !== 'undefined' &&
+            window.getSelection &&
+            document.createRange
+          ) {
+            try {
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+              inserted = document.execCommand('insertText', false, text);
+            } catch {
+              inserted = false;
+            }
+          }
         }
       }
 
@@ -60,22 +67,51 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       const current = getText(el);
       if (!inserted || current.trim() !== text.trim()) {
         if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
-          el.value = text;
+          try {
+            const proto =
+              el.tagName === 'TEXTAREA'
+                ? window.HTMLTextAreaElement.prototype
+                : window.HTMLInputElement.prototype;
+            const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+            if (desc && desc.set) {
+              desc.set.call(el, text);
+            } else {
+              el.value = text;
+            }
+          } catch {
+            el.value = text;
+          }
         } else {
           el.textContent = text;
         }
 
         if (typeof Event !== 'undefined') {
-          try {
-            el.dispatchEvent(
-              new InputEvent('input', {
-                bubbles: true,
-                cancelable: true,
-                inputType: 'insertText',
-                data: text,
-              }),
-            );
-          } catch {
+          if (typeof InputEvent !== 'undefined') {
+            try {
+              el.dispatchEvent(
+                new InputEvent('beforeinput', {
+                  bubbles: true,
+                  cancelable: true,
+                  inputType: 'insertText',
+                  data: text,
+                }),
+              );
+            } catch {
+              // ignore
+            }
+            try {
+              el.dispatchEvent(
+                new InputEvent('input', {
+                  bubbles: true,
+                  cancelable: true,
+                  inputType: 'insertText',
+                  data: text,
+                }),
+              );
+            } catch {
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          } else {
             el.dispatchEvent(new Event('input', { bubbles: true }));
           }
           el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -91,15 +127,35 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     }
   }
 
-  function submit(adapter) {
-    if (!adapter || typeof adapter.findSendButton !== 'function') {
+  function submit(adapter, composerEl) {
+    if (!adapter && !composerEl) {
       return false;
     }
-    const btn = adapter.findSendButton();
-    if (!btn || btn.disabled || btn.getAttribute('aria-disabled') === 'true') {
-      return false;
+
+    const comp =
+      composerEl ||
+      (adapter && typeof adapter.findComposer === 'function'
+        ? adapter.findComposer(
+            typeof document !== 'undefined' ? document : null,
+          )
+        : null);
+
+    if (comp) {
+      const text = getText(comp);
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText === 'function' &&
+        text
+      ) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      }
+      if (typeof comp.focus === 'function') {
+        comp.focus();
+      }
+      return true;
     }
-    btn.click();
+
     return true;
   }
 

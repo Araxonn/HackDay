@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-10-26 11:09",
+  "generatedAt": "2026-10-26 12:25",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "c74a69f",
+    "shortHead": "8a4b223",
     "lastSubjects": [
+      "chore: update project state and verification snapshot",
       "chore: update project state and verification snapshot",
       "fix: wire checkComposerAfterPaste to input event on composerEl in interceptor.js",
       "Merge branch 'main' into feat/solo-build",
-      "feat: add warnInfo function and style for informational banners in preview modal",
-      "feat: enhance local AI Assist integration for enriched redaction and user feedback"
+      "feat: add warnInfo function and style for informational banners in preview modal"
     ],
-    "workingTree": "PROJECT_STATE.md, docs/state/state.json"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/state/state.json, src/content/adapters/chatgpt.js, src/content/composer.js, src/content/interceptor.js, src/content/main.js, src/ui/overlay/preview-modal.css, src/ui/overlay/preview-modal.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
@@ -539,29 +539,29 @@
       "next": "Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning."
     },
     {
-      "id": "M2-005",
+      "id": "M2-008",
       "member": 2,
-      "sequence": 5,
-      "timestamp": "2026-10-26 10:39",
+      "sequence": 8,
+      "timestamp": "2026-10-26 12:10",
       "branch": "feat/solo-build",
-      "heading": "## M2-005 | 2026-10-26 10:39 | feat/solo-build",
-      "line": 60,
+      "heading": "## M2-008 | 2026-10-26 12:10 | feat/solo-build",
+      "line": 105,
       "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: wire checkComposerAfterPaste to input event on composerEl\n**What changed:**\n- Wired `checkComposerAfterPaste` to `composerEl.addEventListener('input', ...)` in `attachHooks` inside `src/content/interceptor.js`.\n- Resolves ESLint `no-unused-vars` error for `checkComposerAfterPaste`.\n- Enables post-paste input event fallback for detecting addresses inserted into the composer (passing test 12d).\n- Verified `npm run lint` and `npm test` both pass cleanly.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** done\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** Post-paste input fallback now actively listens on composerEl for insertFromPaste/insertFromPasteAsQuotation.\n**Next:** Test in live browser extension environment against ChatGPT DOM.",
-      "full": "## M2-005 | 2026-10-26 10:39 | feat/solo-build\n**Prompt:** fix: wire checkComposerAfterPaste to input event on composerEl\n**What changed:**\n- Wired `checkComposerAfterPaste` to `composerEl.addEventListener('input', ...)` in `attachHooks` inside `src/content/interceptor.js`.\n- Resolves ESLint `no-unused-vars` error for `checkComposerAfterPaste`.\n- Enables post-paste input event fallback for detecting addresses inserted into the composer (passing test 12d).\n- Verified `npm run lint` and `npm test` both pass cleanly.\n**Files:** `src/content/interceptor.js` (modified)\n**Status:** done\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** Post-paste input fallback now actively listens on composerEl for insertFromPaste/insertFromPasteAsQuotation.\n**Next:** Test in live browser extension environment against ChatGPT DOM.",
-      "prompt": "fix: wire checkComposerAfterPaste to input event on composerEl",
+      "body": "**Prompt:** fix: prevent modal click-through and close popup on send redacted\n**What changed:**\n- Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.\n- Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.\n- Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.\n- Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements.\n**Files:** `src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.\n**Next:** Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly.",
+      "full": "## M2-008 | 2026-10-26 12:10 | feat/solo-build\n**Prompt:** fix: prevent modal click-through and close popup on send redacted\n**What changed:**\n- Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.\n- Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.\n- Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.\n- Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements.\n**Files:** `src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.\n**Next:** Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly.",
+      "prompt": "fix: prevent modal click-through and close popup on send redacted",
       "changes": [
-        "Wired `checkComposerAfterPaste` to `composerEl.addEventListener('input', ...)` in `attachHooks` inside `src/content/interceptor.js`.",
-        "Resolves ESLint `no-unused-vars` error for `checkComposerAfterPaste`.",
-        "Enables post-paste input event fallback for detecting addresses inserted into the composer (passing test 12d).",
-        "Verified `npm run lint` and `npm test` both pass cleanly."
+        "Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.",
+        "Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.",
+        "Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.",
+        "Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements."
       ],
-      "files": "`src/content/interceptor.js` (modified)",
+      "files": "`src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)",
       "status": "done",
-      "tasks": "T2-04",
+      "tasks": "T1-08, T1-11",
       "decisions": "none",
-      "notes": "Post-paste input fallback now actively listens on composerEl for insertFromPaste/insertFromPasteAsQuotation.",
-      "next": "Test in live browser extension environment against ChatGPT DOM."
+      "notes": "The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.",
+      "next": "Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly."
     },
     {
       "id": "M3-002",
@@ -613,6 +613,81 @@
     }
   ],
   "recentActivity": [
+    {
+      "id": "M2-008",
+      "member": 2,
+      "sequence": 8,
+      "timestamp": "2026-10-26 12:10",
+      "branch": "feat/solo-build",
+      "heading": "## M2-008 | 2026-10-26 12:10 | feat/solo-build",
+      "line": 105,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: prevent modal click-through and close popup on send redacted\n**What changed:**\n- Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.\n- Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.\n- Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.\n- Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements.\n**Files:** `src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.\n**Next:** Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly.",
+      "full": "## M2-008 | 2026-10-26 12:10 | feat/solo-build\n**Prompt:** fix: prevent modal click-through and close popup on send redacted\n**What changed:**\n- Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.\n- Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.\n- Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.\n- Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements.\n**Files:** `src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.\n**Next:** Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly.",
+      "prompt": "fix: prevent modal click-through and close popup on send redacted",
+      "changes": [
+        "Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.",
+        "Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.",
+        "Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.",
+        "Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements."
+      ],
+      "files": "`src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)",
+      "status": "done",
+      "tasks": "T1-08, T1-11",
+      "decisions": "none",
+      "notes": "The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.",
+      "next": "Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly."
+    },
+    {
+      "id": "M2-007",
+      "member": 2,
+      "sequence": 7,
+      "timestamp": "2026-10-26 11:40",
+      "branch": "feat/solo-build",
+      "heading": "## M2-007 | 2026-10-26 11:40 | feat/solo-build",
+      "line": 90,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: copy redacted text to clipboard and paste to composer without auto-send\n**What changed:**\n- Replaced programmatic button click / Enter submission in `composer.js`, `interceptor.js`, and `main.js` with direct clipboard copy (`navigator.clipboard.writeText`), pasting into the ChatGPT composer (`composer.setText`), and focusing the textarea.\n- Removed global `document.execCommand('selectAll')` in favor of element-scoped `Range` selection, eliminating CSP violations with internal sandboxed iframes (such as `runner.html`).\n- Displayed user feedback notification (`modal.warnInfo('📋 Redacted text copied to clipboard & pasted into composer.')`) upon Send Redacted confirmation.\n- Retained full privacy guarantees: ephemeral vault caching, stats counting, and pre-submit safety checks all continue to run.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** Clicking Send Redacted now copies the redacted prompt to the user's clipboard and writes it into ChatGPT's composer without triggering automated submission or CSP errors.\n**Next:** Reload the extension in chrome://extensions, refresh ChatGPT, and test clicking Send Redacted.",
+      "full": "## M2-007 | 2026-10-26 11:40 | feat/solo-build\n**Prompt:** fix: copy redacted text to clipboard and paste to composer without auto-send\n**What changed:**\n- Replaced programmatic button click / Enter submission in `composer.js`, `interceptor.js`, and `main.js` with direct clipboard copy (`navigator.clipboard.writeText`), pasting into the ChatGPT composer (`composer.setText`), and focusing the textarea.\n- Removed global `document.execCommand('selectAll')` in favor of element-scoped `Range` selection, eliminating CSP violations with internal sandboxed iframes (such as `runner.html`).\n- Displayed user feedback notification (`modal.warnInfo('📋 Redacted text copied to clipboard & pasted into composer.')`) upon Send Redacted confirmation.\n- Retained full privacy guarantees: ephemeral vault caching, stats counting, and pre-submit safety checks all continue to run.\n**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** Clicking Send Redacted now copies the redacted prompt to the user's clipboard and writes it into ChatGPT's composer without triggering automated submission or CSP errors.\n**Next:** Reload the extension in chrome://extensions, refresh ChatGPT, and test clicking Send Redacted.",
+      "prompt": "fix: copy redacted text to clipboard and paste to composer without auto-send",
+      "changes": [
+        "Replaced programmatic button click / Enter submission in `composer.js`, `interceptor.js`, and `main.js` with direct clipboard copy (`navigator.clipboard.writeText`), pasting into the ChatGPT composer (`composer.setText`), and focusing the textarea.",
+        "Removed global `document.execCommand('selectAll')` in favor of element-scoped `Range` selection, eliminating CSP violations with internal sandboxed iframes (such as `runner.html`).",
+        "Displayed user feedback notification (`modal.warnInfo('📋 Redacted text copied to clipboard & pasted into composer.')`) upon Send Redacted confirmation.",
+        "Retained full privacy guarantees: ephemeral vault caching, stats counting, and pre-submit safety checks all continue to run."
+      ],
+      "files": "`src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)",
+      "status": "done",
+      "tasks": "T1-08, T1-11",
+      "decisions": "none",
+      "notes": "Clicking Send Redacted now copies the redacted prompt to the user's clipboard and writes it into ChatGPT's composer without triggering automated submission or CSP errors.",
+      "next": "Reload the extension in chrome://extensions, refresh ChatGPT, and test clicking Send Redacted."
+    },
+    {
+      "id": "M2-006",
+      "member": 2,
+      "sequence": 6,
+      "timestamp": "2026-10-26 11:31",
+      "branch": "feat/solo-build",
+      "heading": "## M2-006 | 2026-10-26 11:31 | feat/solo-build",
+      "line": 75,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: robust submit and event simulation for Send Redacted\n**What changed:**\n- Added `#composer-submit-button` and `[data-testid=\"send-button\"]` selectors and enhanced `aria-label` matching in `src/content/adapters/chatgpt.js`.\n- Hardened `setText` in `src/content/composer.js` with `execCommand('selectAll')` and synthetic `beforeinput` events so ProseMirror/React state updates reliably.\n- Upgraded `composer.submit(adapter, composerEl)` to simulate full pointer/mouse events (`pointerdown`, `mousedown`, `pointerup`, `mouseup`, `click`) and fallback to Enter keypress on `composerEl`.\n- Exposed `setIsBypassing` in `src/content/interceptor.js` and wired `main.js` popup `SS_SEND_REDACTED` modal handler with pre-submit PII check, ephemeral vault caching, stats tracking, and bypassing during submission.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** Reload the unpacked extension in chrome://extensions and refresh the active ChatGPT tab before testing.\n**Next:** Test the Send Redacted button in the extension popup on chatgpt.com and verify prompt sends properly.",
+      "full": "## M2-006 | 2026-10-26 11:31 | feat/solo-build\n**Prompt:** fix: robust submit and event simulation for Send Redacted\n**What changed:**\n- Added `#composer-submit-button` and `[data-testid=\"send-button\"]` selectors and enhanced `aria-label` matching in `src/content/adapters/chatgpt.js`.\n- Hardened `setText` in `src/content/composer.js` with `execCommand('selectAll')` and synthetic `beforeinput` events so ProseMirror/React state updates reliably.\n- Upgraded `composer.submit(adapter, composerEl)` to simulate full pointer/mouse events (`pointerdown`, `mousedown`, `pointerup`, `mouseup`, `click`) and fallback to Enter keypress on `composerEl`.\n- Exposed `setIsBypassing` in `src/content/interceptor.js` and wired `main.js` popup `SS_SEND_REDACTED` modal handler with pre-submit PII check, ephemeral vault caching, stats tracking, and bypassing during submission.\n**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T1-08, T1-11\n**Decisions:** none\n**Notes for others:** Reload the unpacked extension in chrome://extensions and refresh the active ChatGPT tab before testing.\n**Next:** Test the Send Redacted button in the extension popup on chatgpt.com and verify prompt sends properly.",
+      "prompt": "fix: robust submit and event simulation for Send Redacted",
+      "changes": [
+        "Added `#composer-submit-button` and `[data-testid=\"send-button\"]` selectors and enhanced `aria-label` matching in `src/content/adapters/chatgpt.js`.",
+        "Hardened `setText` in `src/content/composer.js` with `execCommand('selectAll')` and synthetic `beforeinput` events so ProseMirror/React state updates reliably.",
+        "Upgraded `composer.submit(adapter, composerEl)` to simulate full pointer/mouse events (`pointerdown`, `mousedown`, `pointerup`, `mouseup`, `click`) and fallback to Enter keypress on `composerEl`.",
+        "Exposed `setIsBypassing` in `src/content/interceptor.js` and wired `main.js` popup `SS_SEND_REDACTED` modal handler with pre-submit PII check, ephemeral vault caching, stats tracking, and bypassing during submission."
+      ],
+      "files": "`src/content/adapters/chatgpt.js` (modified), `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)",
+      "status": "done",
+      "tasks": "T1-08, T1-11",
+      "decisions": "none",
+      "notes": "Reload the unpacked extension in chrome://extensions and refresh the active ChatGPT tab before testing.",
+      "next": "Test the Send Redacted button in the extension popup on chatgpt.com and verify prompt sends properly."
+    },
     {
       "id": "M2-005",
       "member": 2,
@@ -900,80 +975,24 @@
       "decisions": "none",
       "notes": "Paste warning is asynchronous for AI-only entities and appears after the local model responds. It does not block paste; the send-time preview remains the final redaction gate.",
       "next": "Reload the extension and ChatGPT tab, enable Local AI Assist, and paste a fake address to verify the warning banner."
-    },
-    {
-      "id": "M1-004",
-      "member": 1,
-      "sequence": 4,
-      "timestamp": "2026-10-25 06:37",
-      "branch": "main",
-      "heading": "## M1-004 | 2026-10-25 06:37 | main",
-      "line": 42,
-      "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: allow content-script Gemma messages\n**What changed:**\n- Relaxed the service-worker sender guard only when Chrome omits `sender.id`; mismatched IDs remain rejected.\n- Verified the project classifier returns an ADDRESS span from local `gemma4:e2b`.\n**Files:** `src/background/service-worker.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Reload both the extension and ChatGPT tab after changing the service worker. Structured phone/PAN detection remains independent of Gemma.\n**Next:** Test an address-only prompt with Local AI Assist enabled.",
-      "full": "## M1-004 | 2026-10-25 06:37 | main\n**Prompt:** fix: allow content-script Gemma messages\n**What changed:**\n- Relaxed the service-worker sender guard only when Chrome omits `sender.id`; mismatched IDs remain rejected.\n- Verified the project classifier returns an ADDRESS span from local `gemma4:e2b`.\n**Files:** `src/background/service-worker.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Reload both the extension and ChatGPT tab after changing the service worker. Structured phone/PAN detection remains independent of Gemma.\n**Next:** Test an address-only prompt with Local AI Assist enabled.",
-      "prompt": "fix: allow content-script Gemma messages",
-      "changes": [
-        "Relaxed the service-worker sender guard only when Chrome omits `sender.id`; mismatched IDs remain rejected.",
-        "Verified the project classifier returns an ADDRESS span from local `gemma4:e2b`."
-      ],
-      "files": "`src/background/service-worker.js` (modified)",
-      "status": "in review",
-      "tasks": "T3-01",
-      "decisions": "none",
-      "notes": "Reload both the extension and ChatGPT tab after changing the service worker. Structured phone/PAN detection remains independent of Gemma.",
-      "next": "Test an address-only prompt with Local AI Assist enabled."
-    },
-    {
-      "id": "M1-003",
-      "member": 1,
-      "sequence": 3,
-      "timestamp": "2026-10-25 06:33",
-      "branch": "main",
-      "heading": "## M1-003 | 2026-10-25 06:33 | main",
-      "line": 29,
-      "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: keep regex PII path independent from Gemma\n**What changed:**\n- Prevented Gemma from running when deterministic regex redaction already found structured PII, so enabling AI cannot delay or alter phone, PAN, email, or Aadhaar handling.\n- Increased the local Gemma timeout to 30 seconds to allow first-load Ollama inference.\n- Updated behavior coverage for structured-PII bypass and AI failure on an address-eligible prompt.\n**Files:** `src/ai/gemma.js` (modified), `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Local smoke classification returned an ADDRESS span from `gemma4:e2b`. Reload the unpacked extension after this change; phone/PAN should use the regex preview immediately even when AI Assist is enabled. Address-only prompts still require Ollama at `127.0.0.1:11434`.\n**Next:** Retest fake phone, PAN, and address prompts in ChatGPT with AI Assist enabled.",
-      "full": "## M1-003 | 2026-10-25 06:33 | main\n**Prompt:** fix: keep regex PII path independent from Gemma\n**What changed:**\n- Prevented Gemma from running when deterministic regex redaction already found structured PII, so enabling AI cannot delay or alter phone, PAN, email, or Aadhaar handling.\n- Increased the local Gemma timeout to 30 seconds to allow first-load Ollama inference.\n- Updated behavior coverage for structured-PII bypass and AI failure on an address-eligible prompt.\n**Files:** `src/ai/gemma.js` (modified), `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Local smoke classification returned an ADDRESS span from `gemma4:e2b`. Reload the unpacked extension after this change; phone/PAN should use the regex preview immediately even when AI Assist is enabled. Address-only prompts still require Ollama at `127.0.0.1:11434`.\n**Next:** Retest fake phone, PAN, and address prompts in ChatGPT with AI Assist enabled.",
-      "prompt": "fix: keep regex PII path independent from Gemma",
-      "changes": [
-        "Prevented Gemma from running when deterministic regex redaction already found structured PII, so enabling AI cannot delay or alter phone, PAN, email, or Aadhaar handling.",
-        "Increased the local Gemma timeout to 30 seconds to allow first-load Ollama inference.",
-        "Updated behavior coverage for structured-PII bypass and AI failure on an address-eligible prompt."
-      ],
-      "files": "`src/ai/gemma.js` (modified), `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)",
-      "status": "in review",
-      "tasks": "T3-01",
-      "decisions": "none",
-      "notes": "Local smoke classification returned an ADDRESS span from `gemma4:e2b`. Reload the unpacked extension after this change; phone/PAN should use the regex preview immediately even when AI Assist is enabled. Address-only prompts still require Ollama at `127.0.0.1:11434`.",
-      "next": "Retest fake phone, PAN, and address prompts in ChatGPT with AI Assist enabled."
-    },
-    {
-      "id": "M1-002",
-      "member": 1,
-      "sequence": 2,
-      "timestamp": "2026-10-25 06:12",
-      "branch": "main",
-      "heading": "## M1-002 | 2026-10-25 06:12 | main",
-      "line": 16,
-      "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: make local Gemma address preview robust\n**What changed:**\n- Hardened local Gemma response parsing to accept structured objects and JSON fenced in markdown, and return an empty result for blank input.\n- Added a regression test for fenced JSON containing an address span.\n- Added an end-to-end behavior test proving an AI `ADDRESS` span uses the same preview flow as structured PII.\n**Files:** `src/ai/gemma.js` (modified), `tests/gemma.test.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Address classification still requires a running local Ollama instance with the configured model. This machine has no `ollama` executable, so live address detection could not be exercised here. The existing design intentionally falls back to regex-only detection when Gemma is unavailable.\n**Next:** Install/start Ollama, pull the configured model, enable Local AI Assist, and verify an address prompt shows the existing preview modal.",
-      "full": "## M1-002 | 2026-10-25 06:12 | main\n**Prompt:** fix: make local Gemma address preview robust\n**What changed:**\n- Hardened local Gemma response parsing to accept structured objects and JSON fenced in markdown, and return an empty result for blank input.\n- Added a regression test for fenced JSON containing an address span.\n- Added an end-to-end behavior test proving an AI `ADDRESS` span uses the same preview flow as structured PII.\n**Files:** `src/ai/gemma.js` (modified), `tests/gemma.test.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** Address classification still requires a running local Ollama instance with the configured model. This machine has no `ollama` executable, so live address detection could not be exercised here. The existing design intentionally falls back to regex-only detection when Gemma is unavailable.\n**Next:** Install/start Ollama, pull the configured model, enable Local AI Assist, and verify an address prompt shows the existing preview modal.",
-      "prompt": "fix: make local Gemma address preview robust",
-      "changes": [
-        "Hardened local Gemma response parsing to accept structured objects and JSON fenced in markdown, and return an empty result for blank input.",
-        "Added a regression test for fenced JSON containing an address span.",
-        "Added an end-to-end behavior test proving an AI `ADDRESS` span uses the same preview flow as structured PII."
-      ],
-      "files": "`src/ai/gemma.js` (modified), `tests/gemma.test.js` (modified), `tests/qa-behaviour.test.js` (modified)",
-      "status": "in review",
-      "tasks": "T3-01",
-      "decisions": "none",
-      "notes": "Address classification still requires a running local Ollama instance with the configured model. This machine has no `ollama` executable, so live address detection could not be exercised here. The existing design intentionally falls back to regex-only detection when Gemma is unavailable.",
-      "next": "Install/start Ollama, pull the configured model, enable Local AI Assist, and verify an address prompt shows the existing preview modal."
     }
   ],
   "openHandoffs": [
+    {
+      "id": "M2-008",
+      "member": 2,
+      "notes": "The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT."
+    },
+    {
+      "id": "M2-007",
+      "member": 2,
+      "notes": "Clicking Send Redacted now copies the redacted prompt to the user's clipboard and writes it into ChatGPT's composer without triggering automated submission or CSP errors."
+    },
+    {
+      "id": "M2-006",
+      "member": 2,
+      "notes": "Reload the unpacked extension in chrome://extensions and refresh the active ChatGPT tab before testing."
+    },
     {
       "id": "M2-005",
       "member": 2,
@@ -1088,11 +1107,6 @@
       "id": "M4-002",
       "member": 4,
       "notes": "`node_modules/` is ignored; the app has no runtime dependencies and no bundler."
-    },
-    {
-      "id": "M4-001",
-      "member": 4,
-      "notes": "The scaffold files were placeholders; existence alone does not mean the feature task is implemented."
     }
   ],
   "repoMap": [
@@ -1310,19 +1324,19 @@
     },
     {
       "path": "src/content/adapters/chatgpt.js",
-      "classification": "implemented (257 lines)"
+      "classification": "implemented (273 lines)"
     },
     {
       "path": "src/content/composer.js",
-      "classification": "implemented (111 lines)"
+      "classification": "implemented (165 lines)"
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (459 lines)"
+      "classification": "implemented (488 lines)"
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (334 lines)"
+      "classification": "implemented (418 lines)"
     },
     {
       "path": "src/core/detector.js",
@@ -1370,11 +1384,11 @@
     },
     {
       "path": "src/ui/overlay/preview-modal.css",
-      "classification": "implemented (377 lines)"
+      "classification": "implemented (381 lines)"
     },
     {
       "path": "src/ui/overlay/preview-modal.js",
-      "classification": "implemented (287 lines)"
+      "classification": "implemented (322 lines)"
     },
     {
       "path": "src/ui/popup/popup.css",
