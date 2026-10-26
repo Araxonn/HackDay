@@ -43,3 +43,16 @@
   **Decisions:** none
   **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.
   **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.
+
+## M2-004 | 2026-10-25 10:14 | feat/solo-build
+**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js
+**What changed:**
+- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.
+- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.
+- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.
+**Files:** `src/content/main.js` (modified)
+**Status:** done
+**Tasks:** T3-01
+**Decisions:** none
+**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.
+**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.
