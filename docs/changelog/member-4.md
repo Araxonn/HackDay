@@ -91,3 +91,15 @@
 **Decisions:** none
 **Notes for others:** none
 **Next:** <one concrete next step>
+
+## M4-007 | 2026-10-25 09:21 | feat/solo-build
+**Prompt:** Diagnose missing eval script
+**What changed:**
+- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.
+- Regenerated project state because its recorded HEAD was behind the latest commit.
+**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)
+**Status:** done
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.
+**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).

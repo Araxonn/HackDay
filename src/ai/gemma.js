@@ -7,7 +7,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     baseUrl: 'http://localhost:11434',
     model: 'gemma4:e2b',
     timeoutMs: 30000,
-    maxChars: 4000,
+    maxChars: 6000,
   };
 
   /**

@@ -75,6 +75,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         .ss-btn-cancel:hover { color: #0f172a; }
         @media (prefers-color-scheme: dark) { .ss-btn-cancel:hover { color: #f8fafc; } }
         .ss-warn-banner { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #ffffff; font-weight: 600; font-size: 13.5px; padding: 10px 18px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 2147483647; display: flex; align-items: center; gap: 10px; max-width: 90vw; }
+        .ss-warn-info-banner { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #0d9488; color: #ffffff; font-weight: 600; font-size: 13.5px; padding: 10px 18px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); z-index: 2147483647; display: flex; align-items: center; gap: 10px; max-width: 90vw; }
         .ss-warn-close { background: transparent; border: none; color: #ffffff; font-size: 16px; cursor: pointer; padding: 0 4px; }
       `;
       shadowRoot.appendChild(styleEl);
@@ -246,9 +247,41 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     }, 6000);
   }
 
+  function warnInfo(message) {
+    const root = getShadowRoot();
+
+    // Remove any existing info banner
+    const existing = root.querySelector('.ss-warn-info-banner');
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+    const banner = document.createElement('div');
+    banner.className = 'ss-warn-info-banner';
+    banner.setAttribute('role', 'status');
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = message || 'AI Assist is active';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ss-warn-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Dismiss');
+    closeBtn.onclick = () => {
+      if (banner.parentNode) banner.parentNode.removeChild(banner);
+    };
+
+    banner.appendChild(textSpan);
+    banner.appendChild(closeBtn);
+    root.appendChild(banner);
+
+    setTimeout(() => {
+      if (banner.parentNode) banner.parentNode.removeChild(banner);
+    }, 5000);
+  }
+
   const modal = {
     show,
     warn,
+    warnInfo,
     _maskValue: maskValue,
   };
 

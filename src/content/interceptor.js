@@ -391,41 +391,41 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     // Capture-phase paste listener with proactive warning banner.
     composerEl.addEventListener('paste', (e) => checkPaste(e), true);
     composerEl.addEventListener(
-      'input',
-      (e) => checkComposerAfterPaste(composerEl, e),
+      'paste',
+      async (e) => {
+        if (!isEnabled || isBypassing) return;
+        try {
+          const clipboardText = e.clipboardData
+            ? e.clipboardData.getData('text')
+            : '';
+          if (clipboardText && SafeShield.detector) {
+            const matches = SafeShield.detector.detect(clipboardText);
+            if (matches && matches.length > 0 && SafeShield.modal) {
+              // Regex found structured PII — red warning
+              SafeShield.modal.warn(
+                `Sensitive data (${matches.map((m) => m.type).join(', ')}) detected in paste. SafeShield will redact before sending.`,
+              );
+            } else if (SafeShield.modal) {
+              // No regex PII — check if AI Assist is on and text has real words
+              const words = clipboardText.trim().split(/\s+/).filter(Boolean);
+              const isAiEnabled =
+                SafeShield.storage && typeof SafeShield.storage.getAiAssist === 'function'
+                  ? await SafeShield.storage.getAiAssist()
+                  : false;
+              if (isAiEnabled && words.length >= 3) {
+                SafeShield.modal.warnInfo(
+                  '🤖 Local AI Assist is ON — names & addresses will be scanned when you send.',
+                );
+              }
+            }
+          }
+        } catch (pasteErr) {
+          console.error('SafeShield paste check error:', pasteErr);
+        }
+      },
       true,
     );
 
-    // ChatGPT may dispatch paste from a nested editor and stop propagation
-    // before a composer-level listener receives it. Capture once at document.
-    if (typeof document !== 'undefined' && document.addEventListener) {
-      document.addEventListener(
-        'paste',
-        (e) => {
-          const target = e && e.target;
-          const isInComposer =
-            target === composerEl ||
-            (composerEl &&
-              typeof composerEl.contains === 'function' &&
-              composerEl.contains(target));
-          if (isInComposer) checkPaste(e);
-        },
-        true,
-      );
-      document.addEventListener(
-        'input',
-        (e) => {
-          const target = e && e.target;
-          const isInComposer =
-            target === composerEl ||
-            (composerEl &&
-              typeof composerEl.contains === 'function' &&
-              composerEl.contains(target));
-          if (isInComposer) checkComposerAfterPaste(composerEl, e);
-        },
-        true,
-      );
-    }
 
     // Capture-phase click listener on document for any send button clicks
     document.addEventListener(

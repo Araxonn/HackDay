@@ -228,30 +228,95 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           return false;
         }
 
-        // Write redacted text to composer and show modal (async, fire-and-forget; reply immediately)
-        try {
-          composer.setText(composerEl, redactResult.redactedText);
-        } catch {
-          sendResponse({ ok: false, message: 'Could not write redacted text to composer.' });
-          return false;
-        }
+        // --- Optional Local Gemma AI Assist (mirrors interceptor.js path) ---
+        // Run asynchronously so we can await storage and the classify call,
+        // then show the modal with the fully-enriched redacted text.
+        (async () => {
+          let redactedText = redactResult.redactedText;
+          const entities = [...(redactResult.entities || [])];
+          const counts = { ...(redactResult.counts || {}) };
 
-        // Show the preview modal asynchronously on the page
-        const modal = SafeShield.modal;
-        if (modal && typeof modal.show === 'function') {
-          modal.show({
-            redactedText: redactResult.redactedText,
-            entities: redactResult.entities,
-            counts: redactResult.counts,
-          }).then((result) => {
-            const action = result ? result.action : 'cancel';
-            if (action === 'send' && SafeShield.composer && SafeShield.composer.submit) {
-              SafeShield.composer.submit(adapter);
-            } else if (action === 'restore' && composer && typeof composer.setText === 'function') {
-              composer.setText(composerEl, text);
+          try {
+            const isAiEnabled =
+              SafeShield.storage && typeof SafeShield.storage.getAiAssist === 'function'
+                ? await SafeShield.storage.getAiAssist()
+                : false;
+
+            const words = redactedText.trim().split(/\s+/).filter(Boolean);
+            const hasRemainingStructuredPII = SafeShield.detector
+              ? SafeShield.detector.detect(redactedText).length > 0
+              : false;
+
+            if (
+              isAiEnabled &&
+              words.length >= 3 &&
+              !hasRemainingStructuredPII &&
+              typeof chrome !== 'undefined' &&
+              chrome.runtime
+            ) {
+              const aiRes = await new Promise((resolve) => {
+                chrome.runtime.sendMessage(
+                  { type: 'SS_AI_CLASSIFY', text: redactedText },
+                  (resp) => {
+                    if (chrome.runtime.lastError || !resp) {
+                      resolve({ ok: false, error: 'unavailable' });
+                    } else {
+                      resolve(resp);
+                    }
+                  },
+                );
+              });
+
+              if (aiRes && aiRes.ok && Array.isArray(aiRes.spans) && aiRes.spans.length > 0) {
+                let nameIndex = 0;
+                let addrIndex = 0;
+                for (const span of aiRes.spans) {
+                  if (redactedText.includes(span.text)) {
+                    let placeholder;
+                    if (span.type === 'NAME') {
+                      nameIndex++;
+                      placeholder = SafeShield.constants
+                        ? SafeShield.constants.makePlaceholder('NAME', nameIndex)
+                        : `[NAME_${nameIndex}]`;
+                      counts.NAME = (counts.NAME || 0) + 1;
+                    } else {
+                      addrIndex++;
+                      placeholder = SafeShield.constants
+                        ? SafeShield.constants.makePlaceholder('ADDRESS', addrIndex)
+                        : `[ADDRESS_${addrIndex}]`;
+                      counts.ADDRESS = (counts.ADDRESS || 0) + 1;
+                    }
+                    redactedText = redactedText.split(span.text).join(placeholder);
+                    entities.push({ placeholder, type: span.type, original: span.text });
+                  }
+                }
+              }
             }
-          }).catch(() => {});
-        }
+          } catch {
+            // Gemma failure never blocks the flow — regex result is kept
+          }
+
+          // Write final redacted text to composer
+          try {
+            composer.setText(composerEl, redactedText);
+          } catch {
+            sendResponse({ ok: false, message: 'Could not write redacted text to composer.' });
+            return;
+          }
+
+          // Show the preview modal with fully-enriched entities
+          const modal = SafeShield.modal;
+          if (modal && typeof modal.show === 'function') {
+            modal.show({ redactedText, entities, counts }).then((result) => {
+              const action = result ? result.action : 'cancel';
+              if (action === 'send' && SafeShield.composer && SafeShield.composer.submit) {
+                SafeShield.composer.submit(adapter);
+              } else if (action === 'restore' && composer && typeof composer.setText === 'function') {
+                composer.setText(composerEl, text);
+              }
+            }).catch(() => {});
+          }
+        })();
 
         sendResponse({ ok: true });
         return false;
