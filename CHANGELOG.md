@@ -7,13 +7,42 @@
 | Member | Role | Entries |
 | --- | --- | ---: |
 | M1 | Detection engine | 1 |
-| M2 | Platform integration | 3 |
+| M2 | Platform integration | 4 |
 | M3 | UI/UX | 2 |
-| M4 | Foundation, data, and docs | 7 |
+| M4 | Foundation, data, and docs | 8 |
 
 ## Activity
 
 ### 2026-10-25
+
+**Role:** Platform integration
+
+## M2-004 | 2026-10-25 10:14 | feat/solo-build
+**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js
+**What changed:**
+- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.
+- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.
+- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.
+**Files:** `src/content/main.js` (modified)
+**Status:** done
+**Tasks:** T3-01
+**Decisions:** none
+**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.
+**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.
+
+**Role:** Foundation, data, and docs
+
+## M4-007 | 2026-10-25 09:21 | feat/solo-build
+**Prompt:** Diagnose missing eval script
+**What changed:**
+- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.
+- Regenerated project state because its recorded HEAD was behind the latest commit.
+**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)
+**Status:** done
+**Tasks:** none
+**Decisions:** none
+**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.
+**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).
 
 **Role:** Foundation, data, and docs
 

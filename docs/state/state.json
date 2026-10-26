@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-10-25 04:54",
+  "generatedAt": "2026-10-26 10:13",
   "git": {
     "branch": "feat/solo-build",
-    "shortHead": "6db2149",
+    "shortHead": "427ec58",
     "lastSubjects": [
+      "feat: complete SafeShield implementation",
       "fix: popup decides support purely from SS_GET_STATUS reply",
       "fix: detect ChatGPT composer robustly and look up Send button lazily",
       "docs: add test report",
-      "chore: apply prettier formatting",
-      "test: add QA static, behaviour and e2e tests"
+      "chore: apply prettier formatting"
     ],
-    "workingTree": "CHANGELOG.md, LICENSE, PROJECT_REPORT.md, PROJECT_STATE.md, README.md, docs/changelog/member-1.md, docs/changelog/member-2.md, docs/changelog/member-3.md, docs/changelog/member-4.md, docs/state/state.json, docs/state/tasks.json, src/content/main.js, src/core/validators.js, src/ui/popup/popup.css, src/ui/popup/popup.html, src/ui/popup/popup.js, tests/detector.test.js, tests/validators.test.js"
+    "workingTree": "CHANGELOG.md, PROJECT_STATE.md, docs/changelog/member-2.md, docs/changelog/member-4.md, docs/state/state.json, src/ai/gemma.js, src/background/service-worker.js, src/content/interceptor.js, src/content/main.js, src/ui/overlay/preview-modal.js"
   },
   "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
@@ -538,27 +538,28 @@
       "next": "Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders)."
     },
     {
-      "id": "M2-003",
+      "id": "M2-004",
       "member": 2,
-      "sequence": 3,
-      "timestamp": "2026-10-25 03:26",
+      "sequence": 4,
+      "timestamp": "2026-10-25 10:14",
       "branch": "feat/solo-build",
-      "heading": "## M2-003 | 2026-10-25 03:26 | feat/solo-build",
-      "line": 35,
+      "heading": "## M2-004 | 2026-10-25 10:14 | feat/solo-build",
+      "line": 47,
       "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
-      "full": "## M2-003 | 2026-10-25 03:26 | feat/solo-build\n**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
-      "prompt": "fix: add SS_SEND_REDACTED handler in main.js",
+      "body": "**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js\n**What changed:**\n- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.\n- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.\n- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.\n**Files:** `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.\n**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.",
+      "full": "## M2-004 | 2026-10-25 10:14 | feat/solo-build\n**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js\n**What changed:**\n- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.\n- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.\n- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.\n**Files:** `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.\n**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.",
+      "prompt": "fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js",
       "changes": [
-        "Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.",
-        "Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'."
+        "The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.",
+        "Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.",
+        "Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow."
       ],
       "files": "`src/content/main.js` (modified)",
       "status": "done",
-      "tasks": "none",
+      "tasks": "T3-01",
       "decisions": "none",
-      "notes": "The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.",
-      "next": "Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears."
+      "notes": "The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.",
+      "next": "Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal."
     },
     {
       "id": "M3-002",
@@ -586,29 +587,77 @@
       "next": "M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish)."
     },
     {
-      "id": "M4-006",
+      "id": "M4-007",
       "member": 4,
-      "sequence": 6,
-      "timestamp": "2026-10-25 04:53",
+      "sequence": 7,
+      "timestamp": "2026-10-25 09:21",
       "branch": "feat/solo-build",
-      "heading": "## M4-006 | 2026-10-25 04:53 | feat/solo-build",
-      "line": 84,
+      "heading": "## M4-007 | 2026-10-25 09:21 | feat/solo-build",
+      "line": 95,
       "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
-      "full": "## M4-006 | 2026-10-25 04:53 | feat/solo-build\n**Prompt:** Publishing combined feature branch changes\n**What changed:**\n- <summarize each change>\n**Files:** <path> (added|modified|deleted)\n**Status:** in review\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** none\n**Next:** <one concrete next step>",
-      "prompt": "Publishing combined feature branch changes",
+      "body": "**Prompt:** Diagnose missing eval script\n**What changed:**\n- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.\n- Regenerated project state because its recorded HEAD was behind the latest commit.\n**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.\n**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).",
+      "full": "## M4-007 | 2026-10-25 09:21 | feat/solo-build\n**Prompt:** Diagnose missing eval script\n**What changed:**\n- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.\n- Regenerated project state because its recorded HEAD was behind the latest commit.\n**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.\n**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).",
+      "prompt": "Diagnose missing eval script",
       "changes": [
-        "<summarize each change>"
+        "Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.",
+        "Regenerated project state because its recorded HEAD was behind the latest commit."
       ],
-      "files": "<path> (added|modified|deleted)",
-      "status": "in review",
+      "files": "`CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)",
+      "status": "done",
       "tasks": "none",
       "decisions": "none",
-      "notes": "none",
-      "next": "<one concrete next step>"
+      "notes": "Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.",
+      "next": "Continue M4's next-up task T1-13 (storage enabled flag and stats counters)."
     }
   ],
   "recentActivity": [
+    {
+      "id": "M2-004",
+      "member": 2,
+      "sequence": 4,
+      "timestamp": "2026-10-25 10:14",
+      "branch": "feat/solo-build",
+      "heading": "## M2-004 | 2026-10-25 10:14 | feat/solo-build",
+      "line": 47,
+      "file": "docs/changelog/member-2.md",
+      "body": "**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js\n**What changed:**\n- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.\n- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.\n- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.\n**Files:** `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.\n**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.",
+      "full": "## M2-004 | 2026-10-25 10:14 | feat/solo-build\n**Prompt:** fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js\n**What changed:**\n- The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.\n- Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.\n- Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow.\n**Files:** `src/content/main.js` (modified)\n**Status:** done\n**Tasks:** T3-01\n**Decisions:** none\n**Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.\n**Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.",
+      "prompt": "fix: wire Gemma AI Assist into SS_SEND_REDACTED handler in main.js",
+      "changes": [
+        "The SS_SEND_REDACTED handler in main.js was calling redactor.redact() directly and then immediately writing to the composer and showing the modal, completely bypassing the Gemma classify step that interceptor.js already implements.",
+        "Replaced the synchronous write-and-show block with an async IIFE that: reads aiAssist from storage, checks word count (≥3) and hasRemainingStructuredPII guard, sends SS_AI_CLASSIFY to the service worker if conditions pass, merges NAME/ADDRESS spans from the response into redactedText and entities, then writes the fully-enriched redacted text to the composer before showing the modal.",
+        "Gemma failure (timeout, unavailable, disabled) is silently swallowed; regex-only redaction result is used as fallback — never blocks the flow."
+      ],
+      "files": "`src/content/main.js` (modified)",
+      "status": "done",
+      "tasks": "T3-01",
+      "decisions": "none",
+      "notes": "The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.",
+      "next": "Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal."
+    },
+    {
+      "id": "M4-007",
+      "member": 4,
+      "sequence": 7,
+      "timestamp": "2026-10-25 09:21",
+      "branch": "feat/solo-build",
+      "heading": "## M4-007 | 2026-10-25 09:21 | feat/solo-build",
+      "line": 95,
+      "file": "docs/changelog/member-4.md",
+      "body": "**Prompt:** Diagnose missing eval script\n**What changed:**\n- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.\n- Regenerated project state because its recorded HEAD was behind the latest commit.\n**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.\n**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).",
+      "full": "## M4-007 | 2026-10-25 09:21 | feat/solo-build\n**Prompt:** Diagnose missing eval script\n**What changed:**\n- Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.\n- Regenerated project state because its recorded HEAD was behind the latest commit.\n**Files:** `CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)\n**Status:** done\n**Tasks:** none\n**Decisions:** none\n**Notes for others:** Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.\n**Next:** Continue M4's next-up task T1-13 (storage enabled flag and stats counters).",
+      "prompt": "Diagnose missing eval script",
+      "changes": [
+        "Confirmed the referenced `tools/eval/run-eval.js` file and an eval npm script are absent from this checkout; the project's configured test command is `npm test`.",
+        "Regenerated project state because its recorded HEAD was behind the latest commit."
+      ],
+      "files": "`CHANGELOG.md` (generated), `PROJECT_STATE.md` (generated), `docs/state/state.json` (generated), `docs/changelog/member-4.md` (modified)",
+      "status": "done",
+      "tasks": "none",
+      "decisions": "none",
+      "notes": "Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout.",
+      "next": "Continue M4's next-up task T1-13 (storage enabled flag and stats counters)."
+    },
     {
       "id": "M4-006",
       "member": 4,
@@ -892,6 +941,16 @@
   ],
   "openHandoffs": [
     {
+      "id": "M2-004",
+      "member": 2,
+      "notes": "The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist."
+    },
+    {
+      "id": "M4-007",
+      "member": 4,
+      "notes": "Use `npm test` to run the existing automated tests; there is no `tools/eval/run-eval.js` evaluation runner in this checkout."
+    },
+    {
       "id": "M4-006",
       "member": 4,
       "notes": "All staged changes are being kept together on `feat/solo-build`; repository guidance prohibits committing directly to `main`."
@@ -1148,7 +1207,7 @@
     },
     {
       "path": "src/background/service-worker.js",
-      "classification": "implemented (103 lines)"
+      "classification": "implemented (108 lines)"
     },
     {
       "path": "src/content/adapters/chatgpt.js",
@@ -1160,11 +1219,11 @@
     },
     {
       "path": "src/content/interceptor.js",
-      "classification": "implemented (320 lines)"
+      "classification": "implemented (332 lines)"
     },
     {
       "path": "src/content/main.js",
-      "classification": "implemented (273 lines)"
+      "classification": "implemented (334 lines)"
     },
     {
       "path": "src/core/detector.js",
@@ -1216,7 +1275,7 @@
     },
     {
       "path": "src/ui/overlay/preview-modal.js",
-      "classification": "implemented (250 lines)"
+      "classification": "implemented (282 lines)"
     },
     {
       "path": "src/ui/popup/popup.css",
