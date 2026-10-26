@@ -56,3 +56,18 @@
 **Decisions:** none
 **Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.
 **Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.
+
+## M2-005 | 2026-10-26 10:39 | feat/solo-build
+**Prompt:** fix: wire checkComposerAfterPaste to input event on composerEl
+**What changed:**
+- Wired `checkComposerAfterPaste` to `composerEl.addEventListener('input', ...)` in `attachHooks` inside `src/content/interceptor.js`.
+- Resolves ESLint `no-unused-vars` error for `checkComposerAfterPaste`.
+- Enables post-paste input event fallback for detecting addresses inserted into the composer (passing test 12d).
+- Verified `npm run lint` and `npm test` both pass cleanly.
+**Files:** `src/content/interceptor.js` (modified)
+**Status:** done
+**Tasks:** T2-04
+**Decisions:** none
+**Notes for others:** Post-paste input fallback now actively listens on composerEl for insertFromPaste/insertFromPasteAsQuotation.
+**Next:** Test in live browser extension environment against ChatGPT DOM.
+

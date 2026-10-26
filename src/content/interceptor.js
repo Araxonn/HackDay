@@ -426,6 +426,12 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       true,
     );
 
+    // Fallback for post-paste input events
+    composerEl.addEventListener(
+      'input',
+      (e) => checkComposerAfterPaste(composerEl, e),
+      true,
+    );
 
     // Capture-phase click listener on document for any send button clicks
     document.addEventListener(
