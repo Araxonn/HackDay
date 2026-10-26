@@ -91,18 +91,23 @@ if (
     }
 
     // Re-verify that user has explicitly enabled AI Assist
+    console.debug('SafeShield SW: SS_AI_CLASSIFY received, checking aiAssist...');
     storage.getAiAssist().then((enabled) => {
       if (!enabled) {
+        console.debug('SafeShield SW: aiAssist is OFF — skipping classify');
         sendResponse({ ok: false, error: 'disabled' });
         return;
       }
 
+      console.debug('SafeShield SW: aiAssist ON — calling gemma.classify (model: gemma4:e2b, timeout: 30s)...');
       gemma
         .classify(message.text, message.options)
         .then((result) => {
+          console.debug('SafeShield SW: classify done — ok:', result.ok, result.error || '', 'spans:', result.spans ? result.spans.length : 0);
           sendResponse(result);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('SafeShield SW: classify threw:', err);
           sendResponse({ ok: false, error: 'unavailable' });
         });
     });

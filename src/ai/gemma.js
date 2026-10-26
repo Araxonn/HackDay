@@ -6,8 +6,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   const DEFAULTS = {
     baseUrl: 'http://localhost:11434',
     model: 'gemma4:e2b',
-    timeoutMs: 3500,
-    maxChars: 4000,
+    timeoutMs: 30000,
+    maxChars: 6000,
   };
 
   /**
