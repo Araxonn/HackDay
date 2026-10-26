@@ -56,3 +56,63 @@
 **Decisions:** none
 **Notes for others:** The interceptor.js path (Enter key / direct send) already had the Gemma wiring. This fix brings the popup Send Redacted button path to parity. Both paths now mirror each other for AI Assist.
 **Next:** Test end-to-end in Chrome — paste prompt with name+address, enable AI toggle, click Send Redacted, confirm NAME_1 and ADDRESS_1 appear in the preview modal.
+
+## M2-005 | 2026-10-26 10:39 | feat/solo-build
+**Prompt:** fix: wire checkComposerAfterPaste to input event on composerEl
+**What changed:**
+- Wired `checkComposerAfterPaste` to `composerEl.addEventListener('input', ...)` in `attachHooks` inside `src/content/interceptor.js`.
+- Resolves ESLint `no-unused-vars` error for `checkComposerAfterPaste`.
+- Enables post-paste input event fallback for detecting addresses inserted into the composer (passing test 12d).
+- Verified `npm run lint` and `npm test` both pass cleanly.
+**Files:** `src/content/interceptor.js` (modified)
+**Status:** done
+**Tasks:** T2-04
+**Decisions:** none
+**Notes for others:** Post-paste input fallback now actively listens on composerEl for insertFromPaste/insertFromPasteAsQuotation.
+**Next:** Test in live browser extension environment against ChatGPT DOM.
+
+
+## M2-006 | 2026-10-26 11:31 | feat/solo-build
+**Prompt:** fix: robust submit and event simulation for Send Redacted
+**What changed:**
+- Added `#composer-submit-button` and `[data-testid="send-button"]` selectors and enhanced `aria-label` matching in `src/content/adapters/chatgpt.js`.
+- Hardened `setText` in `src/content/composer.js` with `execCommand('selectAll')` and synthetic `beforeinput` events so ProseMirror/React state updates reliably.
+- Upgraded `composer.submit(adapter, composerEl)` to simulate full pointer/mouse events (`pointerdown`, `mousedown`, `pointerup`, `mouseup`, `click`) and fallback to Enter keypress on `composerEl`.
+- Exposed `setIsBypassing` in `src/content/interceptor.js` and wired `main.js` popup `SS_SEND_REDACTED` modal handler with pre-submit PII check, ephemeral vault caching, stats tracking, and bypassing during submission.
+**Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)
+**Status:** done
+**Tasks:** T1-08, T1-11
+**Decisions:** none
+**Notes for others:** Reload the unpacked extension in chrome://extensions and refresh the active ChatGPT tab before testing.
+**Next:** Test the Send Redacted button in the extension popup on chatgpt.com and verify prompt sends properly.
+
+
+## M2-007 | 2026-10-26 11:40 | feat/solo-build
+**Prompt:** fix: copy redacted text to clipboard and paste to composer without auto-send
+**What changed:**
+- Replaced programmatic button click / Enter submission in `composer.js`, `interceptor.js`, and `main.js` with direct clipboard copy (`navigator.clipboard.writeText`), pasting into the ChatGPT composer (`composer.setText`), and focusing the textarea.
+- Removed global `document.execCommand('selectAll')` in favor of element-scoped `Range` selection, eliminating CSP violations with internal sandboxed iframes (such as `runner.html`).
+- Displayed user feedback notification (`modal.warnInfo('📋 Redacted text copied to clipboard & pasted into composer.')`) upon Send Redacted confirmation.
+- Retained full privacy guarantees: ephemeral vault caching, stats counting, and pre-submit safety checks all continue to run.
+**Files:** `src/content/composer.js` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)
+**Status:** done
+**Tasks:** T1-08, T1-11
+**Decisions:** none
+**Notes for others:** Clicking Send Redacted now copies the redacted prompt to the user's clipboard and writes it into ChatGPT's composer without triggering automated submission or CSP errors.
+**Next:** Reload the extension in chrome://extensions, refresh ChatGPT, and test clicking Send Redacted.
+
+
+## M2-008 | 2026-10-26 12:10 | feat/solo-build
+**Prompt:** fix: prevent modal click-through and close popup on send redacted
+**What changed:**
+- Fixed critical pointer-events bug in `src/ui/overlay/preview-modal.js` and `preview-modal.css`: added `pointer-events: auto` to `.ss-backdrop`, `.ss-modal`, `.ss-close-btn`, and `.ss-btn`, and dynamically toggled `hostEl.style.pointerEvents = 'auto'` while the modal is open. When closed, resets host pointer events to `none`.
+- Added pointer event propagation stop (`stopPropagation`, `preventDefault`) on backdrop, mousedown, mouseup, pointerdown, and button clicks, completely preventing clicks from bleeding through to underlying ChatGPT page elements.
+- Added 3-second timeout guard to local AI classification calls in `interceptor.js` and `main.js` so offline Ollama service instances never hang or freeze the UI.
+- Optimized capture-phase click listener in `interceptor.js` with early bailouts for clicks originating on `#safeshield-preview-modal-host` and non-clickable elements.
+**Files:** `src/ui/overlay/preview-modal.js` (modified), `src/ui/overlay/preview-modal.css` (modified), `src/content/interceptor.js` (modified), `src/content/main.js` (modified)
+**Status:** done
+**Tasks:** T1-08, T1-11
+**Decisions:** none
+**Notes for others:** The modal buttons now reliably capture mouse clicks and immediately close the dialog upon clicking 'Send redacted', 'Cancel', or 'Restore original' without passing clicks through to ChatGPT.
+**Next:** Reload extension at chrome://extensions and test 'Send redacted' on chatgpt.com to verify popup closes promptly.
+

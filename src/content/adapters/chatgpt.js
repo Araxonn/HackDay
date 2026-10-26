@@ -12,7 +12,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   ];
 
   const SEND_BUTTON_SELECTORS = [
+    '#composer-submit-button',
     'button[data-testid="send-button"]',
+    '[data-testid="send-button"]',
     'button[aria-label*="Send" i]',
     'form button[type="submit"]',
   ];
@@ -178,8 +180,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return true;
     }
 
-    // 1. button[data-testid="send-button"]
-    const testIdButtons = queryAll(d, 'button[data-testid="send-button"]');
+    // 0. Explicit submit button by ID
+    const composerSubmitBtn =
+      typeof d.querySelector === 'function'
+        ? d.querySelector('#composer-submit-button')
+        : null;
+    if (composerSubmitBtn && isCandidateValid(composerSubmitBtn)) {
+      return composerSubmitBtn;
+    }
+
+    // 1. button[data-testid="send-button"] or [data-testid="send-button"]
+    const testIdButtons = queryAll(
+      d,
+      'button[data-testid="send-button"], [data-testid="send-button"]',
+    );
     for (const btn of testIdButtons) {
       if (isCandidateValid(btn)) {
         return btn;
@@ -189,7 +203,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     // 2. button[aria-label*="Send"] (case-insensitive)
     let ariaButtons;
     try {
-      ariaButtons = queryAll(d, 'button[aria-label*="Send" i]');
+      ariaButtons = queryAll(
+        d,
+        'button[aria-label*="Send" i], [aria-label*="Send" i], button[aria-label="Send prompt"], button[aria-label="Send message"]',
+      );
     } catch {
       ariaButtons = [];
     }

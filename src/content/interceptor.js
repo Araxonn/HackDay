@@ -106,9 +106,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         return;
       }
 
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          resolve({ ok: false, error: 'timeout' });
+        }
+      }, 3000);
+
       chrome.runtime.sendMessage(
         { type: 'SS_AI_CLASSIFY', text },
         (resp) => {
+          clearTimeout(timer);
+          if (settled) return;
+          settled = true;
           try {
             if (chrome.runtime.lastError || !resp) {
               resolve({ ok: false, error: 'unavailable' });
@@ -318,29 +329,27 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         if (vault) vault.remember(entities);
         if (storage) await storage.addCounts(counts);
 
-        // Submit redacted prompt
-        isBypassing = true;
-        try {
-          let submitted = false;
-          if (composer && typeof composer.submit === 'function') {
-            submitted = composer.submit(adapter);
-          }
-          if (!submitted && typeof KeyboardEvent !== 'undefined') {
-            // Fallback dispatching Enter key on composer
-            const enterEvt = new KeyboardEvent('keydown', {
-              key: 'Enter',
-              code: 'Enter',
-              keyCode: 13,
-              which: 13,
-              bubbles: true,
-              cancelable: true,
-            });
-            composerEl.dispatchEvent(enterEvt);
-          }
-        } finally {
-          setTimeout(() => {
-            isBypassing = false;
-          }, 60);
+        // Copy redacted text to clipboard and ensure it is in the composer (no auto-submit)
+        if (
+          typeof navigator !== 'undefined' &&
+          navigator.clipboard &&
+          typeof navigator.clipboard.writeText === 'function'
+        ) {
+          navigator.clipboard.writeText(redactedText).catch(() => {});
+        }
+        if (composer && typeof composer.setText === 'function') {
+          composer.setText(composerEl, redactedText);
+        }
+        if (composerEl && typeof composerEl.focus === 'function') {
+          composerEl.focus();
+        }
+        if (composer && typeof composer.submit === 'function') {
+          composer.submit(adapter, composerEl);
+        }
+        if (modal && typeof modal.warnInfo === 'function') {
+          modal.warnInfo(
+            '📋 Redacted text copied to clipboard & pasted into composer.',
+          );
         }
       } else if (action === 'restore') {
         // User requested local edit: restore original text into composer
@@ -426,11 +435,33 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       true,
     );
 
+    // Fallback for post-paste input events
+    composerEl.addEventListener(
+      'input',
+      (e) => checkComposerAfterPaste(composerEl, e),
+      true,
+    );
 
     // Capture-phase click listener on document for any send button clicks
     document.addEventListener(
       'click',
       (e) => {
+        // Fast bail-out: ignore clicks on SafeShield modal host or when not clicking a button/clickable
+        if (
+          e.target &&
+          (e.target.id === 'safeshield-preview-modal-host' ||
+            (typeof e.target.closest === 'function' &&
+              e.target.closest('#safeshield-preview-modal-host')))
+        ) {
+          return;
+        }
+        if (
+          e.target &&
+          typeof e.target.closest === 'function' &&
+          !e.target.closest('button, [role="button"], svg, path')
+        ) {
+          return;
+        }
         const sendBtn = adapter ? adapter.findSendButton() : null;
         if (sendBtn && (e.target === sendBtn || sendBtn.contains(e.target))) {
           handleSubmission(e, composerEl, adapter);
@@ -470,6 +501,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     getIsEnabled: () => isEnabled,
     setIsEnabled: (v) => {
       isEnabled = Boolean(v);
+    },
+    getIsBypassing: () => isBypassing,
+    setIsBypassing: (v) => {
+      isBypassing = Boolean(v);
     },
     getIsAttached: () =>
       Boolean(attachedComposer && attachedComposer.isConnected),

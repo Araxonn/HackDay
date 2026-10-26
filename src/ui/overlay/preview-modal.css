@@ -24,6 +24,7 @@
   padding: 16px;
   box-sizing: border-box;
   animation: ss-fade-in 0.18s ease-out;
+  pointer-events: auto;
 }
 
 @keyframes ss-fade-in {
@@ -50,6 +51,7 @@
   overflow: hidden;
   box-sizing: border-box;
   border: 1px solid #e2e8f0;
+  pointer-events: auto;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -103,6 +105,7 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
+  pointer-events: auto;
 }
 
 .ss-close-btn:hover {
@@ -282,6 +285,7 @@
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid transparent;
+  pointer-events: auto;
 }
 
 .ss-btn:focus-visible {

@@ -130,16 +130,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   // Ensure fail-closed if Enter intercepted but no way to submit
   if (SafeShield.composer && typeof SafeShield.composer.submit === 'function') {
     const origSubmit = SafeShield.composer.submit;
-    SafeShield.composer.submit = function (ad) {
+    SafeShield.composer.submit = function (ad, compEl) {
       const btn =
         ad && typeof ad.findSendButton === 'function'
-          ? ad.findSendButton()
+          ? ad.findSendButton(
+              typeof document !== 'undefined' ? document : null,
+              compEl,
+            )
           : null;
       if (
-        !btn ||
-        btn.disabled ||
-        (typeof btn.getAttribute === 'function' &&
-          btn.getAttribute('aria-disabled') === 'true')
+        (!btn ||
+          btn.disabled ||
+          (typeof btn.getAttribute === 'function' &&
+            btn.getAttribute('aria-disabled') === 'true')) &&
+        !compEl
       ) {
         if (SafeShield.modal && typeof SafeShield.modal.warn === 'function') {
           SafeShield.modal.warn(
@@ -148,7 +152,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         }
         return false;
       }
-      return origSubmit.call(this, ad);
+      return origSubmit.call(this, ad, compEl);
     };
   }
 
@@ -255,9 +259,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
               chrome.runtime
             ) {
               const aiRes = await new Promise((resolve) => {
+                let settled = false;
+                const timer = setTimeout(() => {
+                  if (!settled) {
+                    settled = true;
+                    resolve({ ok: false, error: 'timeout' });
+                  }
+                }, 3000);
+
                 chrome.runtime.sendMessage(
                   { type: 'SS_AI_CLASSIFY', text: redactedText },
                   (resp) => {
+                    clearTimeout(timer);
+                    if (settled) return;
+                    settled = true;
                     if (chrome.runtime.lastError || !resp) {
                       resolve({ ok: false, error: 'unavailable' });
                     } else {
@@ -307,14 +322,87 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           // Show the preview modal with fully-enriched entities
           const modal = SafeShield.modal;
           if (modal && typeof modal.show === 'function') {
-            modal.show({ redactedText, entities, counts }).then((result) => {
-              const action = result ? result.action : 'cancel';
-              if (action === 'send' && SafeShield.composer && SafeShield.composer.submit) {
-                SafeShield.composer.submit(adapter);
-              } else if (action === 'restore' && composer && typeof composer.setText === 'function') {
-                composer.setText(composerEl, text);
-              }
-            }).catch(() => {});
+            modal
+              .show({ redactedText, entities, counts })
+              .then(async (result) => {
+                const action = result ? result.action : 'cancel';
+                if (action === 'send') {
+                  const vault = SafeShield.vault;
+                  const storage = SafeShield.storage;
+                  const detector = SafeShield.detector;
+
+                  // Safety check: ensure no raw PII remains in composer
+                  let detected = [];
+                  try {
+                    const finalText = composer ? composer.getText(composerEl) : '';
+                    if (detector && typeof detector.detect === 'function') {
+                      detected = detector.detect(finalText);
+                    }
+                  } catch {
+                    if (modal && typeof modal.warn === 'function') {
+                      modal.warn(
+                        'Send blocked: could not verify composer text safety',
+                      );
+                    }
+                    return;
+                  }
+
+                  if (detected && detected.length > 0) {
+                    if (modal && typeof modal.warn === 'function') {
+                      modal.warn(
+                        'Send blocked: sensitive data detected in composer',
+                      );
+                    }
+                    return;
+                  }
+
+                  // Remember entities in vault and update stats
+                  if (vault && typeof vault.remember === 'function') {
+                    vault.remember(entities);
+                  }
+                  if (storage && typeof storage.addCounts === 'function') {
+                    await storage.addCounts(counts);
+                  }
+
+                  // Copy redacted text to clipboard and ensure it is in the composer (no auto-submit)
+                  if (
+                    typeof navigator !== 'undefined' &&
+                    navigator.clipboard &&
+                    typeof navigator.clipboard.writeText === 'function'
+                  ) {
+                    navigator.clipboard.writeText(redactedText).catch(() => {});
+                  }
+                  if (composer && typeof composer.setText === 'function') {
+                    composer.setText(composerEl, redactedText);
+                  }
+                  if (composerEl && typeof composerEl.focus === 'function') {
+                    composerEl.focus();
+                  }
+                  if (
+                    SafeShield.composer &&
+                    typeof SafeShield.composer.submit === 'function'
+                  ) {
+                    SafeShield.composer.submit(adapter, composerEl);
+                  }
+                  if (modal && typeof modal.warnInfo === 'function') {
+                    modal.warnInfo(
+                      '📋 Redacted text copied to clipboard & pasted into composer.',
+                    );
+                  }
+                } else if (
+                  action === 'restore' &&
+                  composer &&
+                  typeof composer.setText === 'function'
+                ) {
+                  composer.setText(composerEl, text);
+                } else {
+                  // Cancel: restore original prompt so the user's draft is not lost
+                  if (composer && typeof composer.setText === 'function') {
+                    composer.setText(composerEl, text);
+                  }
+                }
+              })
+              .catch(() => {});
           }
         })();
 

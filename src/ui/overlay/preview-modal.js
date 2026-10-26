@@ -35,14 +35,14 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       const styleEl = document.createElement('style');
       styleEl.textContent = `
         :host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #0f172a; }
-        .ss-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2147483647; padding: 16px; box-sizing: border-box; }
-        .ss-modal { background: #ffffff; color: #0f172a; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25); width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; border: 1px solid #e2e8f0; }
+        .ss-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2147483647; padding: 16px; box-sizing: border-box; pointer-events: auto; }
+        .ss-modal { background: #ffffff; color: #0f172a; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25); width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; border: 1px solid #e2e8f0; pointer-events: auto; }
         @media (prefers-color-scheme: dark) { .ss-modal { background: #1e293b; color: #f8fafc; border-color: #334155; } }
         .ss-header { padding: 14px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
         @media (prefers-color-scheme: dark) { .ss-header { border-color: #334155; } }
         .ss-header-title-wrap { display: flex; align-items: center; gap: 8px; }
         .ss-title { margin: 0; font-size: 15px; font-weight: 700; color: inherit; }
-        .ss-close-btn { background: transparent; border: none; font-size: 20px; color: #64748b; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        .ss-close-btn { background: transparent; border: none; font-size: 20px; color: #64748b; cursor: pointer; padding: 2px 6px; border-radius: 4px; pointer-events: auto; }
         .ss-close-btn:hover { background-color: #f1f5f9; color: #0f172a; }
         @media (prefers-color-scheme: dark) { .ss-close-btn:hover { background-color: #334155; color: #f8fafc; } }
         .ss-body { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -64,7 +64,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         @media (prefers-color-scheme: dark) { .ss-preview-box { background: #0f172a; border-color: #334155; } }
         .ss-footer { padding: 12px 18px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; background: #f8fafc; }
         @media (prefers-color-scheme: dark) { .ss-footer { border-color: #334155; background: #1e293b; } }
-        .ss-btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; border: 1px solid transparent; }
+        .ss-btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; border: 1px solid transparent; pointer-events: auto; }
         .ss-btn:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
         .ss-btn-primary { background: #10b981; color: #ffffff; }
         .ss-btn-primary:hover { background: #059669; }
@@ -89,8 +89,13 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       const root = getShadowRoot();
       const previousActiveEl = document.activeElement;
 
+      if (hostEl) {
+        hostEl.style.pointerEvents = 'auto';
+      }
+
       const backdrop = document.createElement('div');
       backdrop.className = 'ss-backdrop';
+      backdrop.style.pointerEvents = 'auto';
       backdrop.setAttribute('role', 'dialog');
       backdrop.setAttribute('aria-modal', 'true');
       backdrop.setAttribute('aria-labelledby', 'ss-modal-title');
@@ -170,6 +175,9 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         if (backdrop.parentNode) {
           backdrop.parentNode.removeChild(backdrop);
         }
+        if (hostEl && shadowRoot && !shadowRoot.querySelector('.ss-backdrop')) {
+          hostEl.style.pointerEvents = 'none';
+        }
         if (previousActiveEl && typeof previousActiveEl.focus === 'function') {
           previousActiveEl.focus();
         }
@@ -205,10 +213,38 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
       document.addEventListener('keydown', onKeyDown, true);
 
-      sendBtn.addEventListener('click', () => cleanup('send'));
-      restoreBtn.addEventListener('click', () => cleanup('restore'));
-      cancelBtn.addEventListener('click', () => cleanup('cancel'));
-      closeX.addEventListener('click', () => cleanup('cancel'));
+      // Block all pointer events from bleeding through to underlying page
+      backdrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (e.target === backdrop) {
+          cleanup('cancel');
+        }
+      });
+      backdrop.addEventListener('mousedown', (e) => e.stopPropagation());
+      backdrop.addEventListener('mouseup', (e) => e.stopPropagation());
+      backdrop.addEventListener('pointerdown', (e) => e.stopPropagation());
+      backdrop.addEventListener('pointerup', (e) => e.stopPropagation());
+
+      sendBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('send');
+      });
+      restoreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('restore');
+      });
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('cancel');
+      });
+      closeX.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup('cancel');
+      });
     });
   }
 
