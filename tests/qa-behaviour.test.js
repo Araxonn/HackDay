@@ -125,6 +125,7 @@ class FakeEvent {
     this.metaKey = Boolean(init.metaKey);
     this.altKey = Boolean(init.altKey);
     this.isComposing = Boolean(init.isComposing);
+    this.inputType = init.inputType || '';
     this.clipboardData = init.clipboardData || null;
     this.target = init.target || null;
   }
@@ -231,6 +232,48 @@ test('2. Enter with PII: send is paused, text replaced with redacted text, modal
   assert.equal(modalPayload.redactedText.includes('test@corp.in'), false);
   assert.equal(modalPayload.redactedText.includes(validAadhaar), false);
   assert.equal(modalPayload.redactedText.includes('ABCPE1234F'), false);
+});
+
+test('2a. AI address detection uses the same preview flow as structured PII', async () => {
+  const SS = setupSafeShieldEnv();
+  await SS.storage.setAiAssist(true);
+  const prompt = 'Deliver the file to 42 Green Park Lane today.';
+  const composerEl = new FakeElement('TEXTAREA', prompt);
+  let modalPayload = null;
+
+  globalThis.chrome = {
+    runtime: {
+      sendMessage: (message, callback) => {
+        assert.equal(message.type, 'SS_AI_CLASSIFY');
+        assert.equal(message.text, prompt);
+        callback({
+          ok: true,
+          spans: [{ type: 'ADDRESS', text: '42 Green Park Lane' }],
+        });
+      },
+    },
+  };
+
+  SS.modal = {
+    show: async (params) => {
+      modalPayload = params;
+      return { action: 'cancel' };
+    },
+    warn: () => {},
+  };
+
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  const enterEvt = new FakeEvent('keydown', { key: 'Enter', cancelable: true });
+  await SS.interceptor.handleSubmission(enterEvt, composerEl, adapter);
+
+  assert.equal(enterEvt.defaultPrevented, true);
+  assert.ok(modalPayload);
+  assert.equal(modalPayload.counts.ADDRESS, 1);
+  assert.equal(modalPayload.redactedText, 'Deliver the file to [ADDRESS_1] today.');
 });
 
 test('3. Modal action "send": only redacted text submitted; vault.remember and storage.addCounts called once', async () => {
@@ -679,6 +722,161 @@ test('12. Paste interception shows a warning for pasted PII and does not block n
   );
 });
 
+test('12b. Paste warning uses browser text/plain data and regex fallback with AI enabled', async () => {
+  const SS = setupSafeShieldEnv();
+  const composerEl = new FakeElement('TEXTAREA');
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  await SS.storage.setAiAssist(true);
+  let aiCalled = false;
+  globalThis.chrome = {
+    runtime: {
+      sendMessage: (message, callback) => {
+        aiCalled = true;
+        callback({ ok: true, spans: [] });
+      },
+    },
+  };
+
+  let warnMessage = null;
+  SS.modal = {
+    warn: (message) => {
+      warnMessage = message;
+    },
+  };
+
+  SS.interceptor.attachHooks(composerEl, adapter);
+  composerEl.dispatchEvent(
+    new FakeEvent('paste', {
+      cancelable: true,
+      clipboardData: {
+        getData: (format) =>
+          format === 'text/plain' ? 'Call 9876543210 today' : '',
+      },
+    }),
+  );
+
+  assert.ok(warnMessage, 'Regex-detected paste must show a warning');
+  assert.ok(warnMessage.includes('PHONE'));
+  assert.equal(aiCalled, false, 'Gemma must not replace deterministic detection');
+});
+
+test('12c. Address regex fallback warns without requiring Gemma', () => {
+  const SS = setupSafeShieldEnv();
+  const composerEl = new FakeElement('TEXTAREA');
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  SS.storage.getAiAssist = async () => false;
+  let warnMessage = null;
+  SS.modal = {
+    warn: (message) => {
+      warnMessage = message;
+    },
+  };
+
+  SS.interceptor.attachHooks(composerEl, adapter);
+  composerEl.dispatchEvent(
+    new FakeEvent('paste', {
+      cancelable: true,
+      clipboardData: {
+        getData: (format) =>
+          format === 'text/plain'
+            ? 'Deliver this to 42 Green Park Lane, Pune.'
+            : '',
+      },
+    }),
+  );
+
+  assert.ok(warnMessage, 'Address fallback must show a warning');
+  assert.ok(warnMessage.includes('ADDRESS'));
+});
+
+test('12d. Address warning falls back to post-paste input events', () => {
+  const SS = setupSafeShieldEnv();
+  const composerEl = new FakeElement(
+    'TEXTAREA',
+    'Deliver this to 42 Green Park Lane, Pune.',
+  );
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  let warnMessage = null;
+  SS.modal = {
+    warn: (message) => {
+      warnMessage = message;
+    },
+  };
+
+  SS.interceptor.attachHooks(composerEl, adapter);
+  composerEl.dispatchEvent(
+    new FakeEvent('input', {
+      inputType: 'insertFromPaste',
+    }),
+  );
+
+  assert.ok(warnMessage);
+  assert.ok(warnMessage.includes('ADDRESS'));
+});
+
+test('12a. Paste interception warns for an AI-detected address', async () => {
+  const SS = setupSafeShieldEnv();
+  const composerEl = new FakeElement('TEXTAREA');
+  const adapter = {
+    findComposer: () => composerEl,
+    findSendButton: () => new FakeElement('BUTTON'),
+  };
+
+  await SS.storage.setAiAssist(true);
+  globalThis.chrome = {
+    runtime: {
+      sendMessage: (message, callback) => {
+        assert.equal(message.type, 'SS_AI_CLASSIFY');
+        assert.equal(
+          message.text,
+          'Deliver this to [ADDRESS_1].',
+        );
+        callback({
+          ok: true,
+          spans: [{ type: 'ADDRESS', text: '42 Green Park Lane, Pune' }],
+        });
+      },
+    },
+  };
+
+  let warnMessage = null;
+  SS.modal = {
+    warn: (message) => {
+      warnMessage = message;
+    },
+  };
+
+  SS.interceptor.attachHooks(composerEl, adapter);
+  composerEl.dispatchEvent(
+    new FakeEvent('paste', {
+      cancelable: true,
+      clipboardData: {
+        getData: (format) =>
+          format === 'text' ? 'Deliver this to 42 Green Park Lane, Pune.' : '',
+      },
+    }),
+  );
+
+  for (let i = 0; i < 10 && !warnMessage; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  assert.ok(warnMessage);
+  assert.ok(warnMessage.includes('ADDRESS'));
+});
+
 test('13. Status rules in main.js: active, off, unsupported', () => {
   const SS = setupSafeShieldEnv();
   const main = SS.main;
@@ -895,28 +1093,25 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   );
   assert.equal(ghostEntity, undefined, 'Hallucinated span must be dropped');
 
-  // Case 4: AI timeout / error -> never blocks send, note set in modal
+  // Case 4: AI timeout / error -> never blocks an AI-eligible send, note set in modal
   globalThis.chrome.runtime.sendMessage = (msg, cb) => {
     cb({ ok: false, error: 'timeout' });
   };
-  SS.redactor.redact = () => ({
-    redactedText: 'Phone is [PHONE_1] and check this prompt out',
-    entities: [
-      { placeholder: '[PHONE_1]', type: 'PHONE', original: '9876543210' },
-    ],
-    counts: { PHONE: 1 },
-  });
-
-  let noteReceived = null;
-  SS.modal.show = async (p) => {
-    noteReceived = p.note;
+  let modalShownOnAiFailure = false;
+  SS.modal.show = async () => {
+    modalShownOnAiFailure = true;
     return { action: 'cancel' };
   };
 
   const composerEl4 = new FakeElement(
     'TEXTAREA',
-    'Phone is 9876543210 and check this prompt out',
+    'Please review this address draft carefully today',
   );
+  SS.redactor.redact = () => ({
+    redactedText: 'Please review this address draft carefully today',
+    entities: [],
+    counts: {},
+  });
   await SS.interceptor.handleSubmission(
     new FakeEvent('keydown', { key: 'Enter', cancelable: true }),
     composerEl4,
@@ -924,7 +1119,8 @@ test('15. Gemma path: AI off no message; hallucinated span dropped; timeout does
   );
 
   assert.equal(
-    noteReceived,
-    'AI check unavailable: only pattern detection ran',
+    modalShownOnAiFailure,
+    false,
+    'AI failure with no detected entity should release the unchanged prompt',
   );
 });

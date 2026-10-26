@@ -12,7 +12,7 @@
     ],
     "workingTree": "src/ui/overlay/preview-modal.js"
   },
-  "project": "## Overview\n\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\n\n## Problem statement\n\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\n\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\n\n## Requirements\n\nCore features:\n\n- Automatic PII detection.\n- Smart redaction with stable, typed placeholders.\n- Pre-submission protection before text leaves the page.\n- Privacy shield toggle.\n- Detection preview before sending.\n- Local restoration of original text.\n- Privacy dashboard with counts only.\n- Indian language support, including Hindi/Hinglish where feasible.\n- Clean, modern UI.\n\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\n\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\n\n## Privacy rules\n\n- All detection runs locally.\n- Never send unredacted text to any external service.\n- Fail closed: if detection or redaction throws, block the send and warn the user.\n- Show “Active” only if the composer is found and interception hooks are attached.\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\n- Persist dashboard counts only, never detected values.\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\n\n## Tech stack\n\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\n\n## Architecture and data flow\n\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\n\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\n\n## Contracts\n\n- `detect(text) -> [{ type, start, end, value }]`\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\n- `restore(text, entities) -> string`\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\n\n## Ownership map\n\n- M1: detection engine (`src/core`) and tests.\n- M2: platform integration (`src/content`).\n- M3: UI/UX (`src/ui`) and assets.\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\n\n## Conventions\n\n- Branch names: `feat/<member>-<task>`.\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\n- Keep pull requests small.\n- Review pairing: M1 <-> M2 and M3 <-> M4.\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\n\n## Open questions\n\n- Final product name: “Safe Shield” or “GuptAI”.",
+  "project": "## Overview\r\n\r\nSafe Shield (also called GuptAI by the team; final name is open) is a Chrome Manifest V3 browser extension that protects people using cloud AI with private documents. It detects and redacts sensitive content locally before the user submits a prompt, then lets the user review the redacted version and restore originals locally.\r\n\r\n## Problem statement\r\n\r\nHacktoberfest Hack Day, problem statement #3: “PII redaction for Indian documents and languages”. People paste documents containing names, IDs, and account numbers into cloud chatbots. The product helps anyone using cloud AI with private documents.\r\n\r\nThe slide’s “What to build” box discusses news claims and source verification and appears to belong to a different problem statement. The team follows the PII project description; see D-001.\r\n\r\n## Requirements\r\n\r\nCore features:\r\n\r\n- Automatic PII detection.\r\n- Smart redaction with stable, typed placeholders.\r\n- Pre-submission protection before text leaves the page.\r\n- Privacy shield toggle.\r\n- Detection preview before sending.\r\n- Local restoration of original text.\r\n- Privacy dashboard with counts only.\r\n- Indian language support, including Hindi/Hinglish where feasible.\r\n- Clean, modern UI.\r\n\r\nFirst supported platform: ChatGPT at `chatgpt.com` and `chat.openai.com`.\r\n\r\nDelivery is time-boxed to six hours, with feature freeze at about hour 5.5. Tier 1 is must-have, Tier 2 is only if stable, and Tier 3 is after the window.\r\n\r\n## Privacy rules\r\n\r\n- All detection runs locally.\r\n- Never send unredacted text to any external service.\r\n- Fail closed: if detection or redaction throws, block the send and warn the user.\r\n- Show “Active” only if the composer is found and interception hooks are attached.\r\n- Keep the placeholder-to-original map in memory or `chrome.storage.session` only.\r\n- Persist dashboard counts only, never detected values.\r\n- Gemma is optional Tier 3; prefer local execution (for example, through Ollama), and only provide already-redacted text. The core project requires no model API.\r\n\r\n## Tech stack\r\n\r\nChrome Manifest V3, plain JavaScript, no bundler, and no runtime dependencies. Development dependencies may support formatting, linting, and tests. Any optional Gemma integration is Tier 3 only.\r\n\r\n## Architecture and data flow\r\n\r\n`type -> intercept send -> detect locally -> redact -> preview -> send redacted -> update counts`\r\n\r\nContent scripts target the ChatGPT composer. Since MV3 content scripts cannot use ES module imports without a bundler, files in `src/core`, `src/shared`, and `src/content` attach exports to `globalThis.SafeShield` and use a guarded `module.exports` for Node tests.\r\n\r\n## Contracts\r\n\r\n- `detect(text) -> [{ type, start, end, value }]`\r\n- `redact(text) -> { redactedText, entities: [{ placeholder, type, original }], counts }`\r\n- `restore(text, entities) -> string`\r\n- Placeholder form: `[TYPE_n]`, numbered per type; the same value receives the same placeholder.\r\n- Storage keys: `enabled` (boolean) and `stats` (counts per type only).\r\n\r\n## Ownership map\r\n\r\n- M1: detection engine (`src/core`) and tests.\r\n- M2: platform integration (`src/content`).\r\n- M3: UI/UX (`src/ui`) and assets.\r\n- M4: foundation, data, and docs (`manifest.json`, `src/shared`, `src/dashboard`, `src/background`, `docs`, `.github`, and scripts).\r\n\r\n## Conventions\r\n\r\n- Branch names: `feat/<member>-<task>`.\r\n- Use conventional commit prefixes such as `feat:`, `fix:`, `test:`, and `chore:`.\r\n- Keep pull requests small.\r\n- Review pairing: M1 <-> M2 and M3 <-> M4.\r\n- Keep per-member history in `docs/changelog/member-N.md`; generated master files must not be edited by hand.\r\n\r\n## Open questions\r\n\r\n- Final product name: “Safe Shield” or “GuptAI”.",
   "progress": {
     "tiers": {
       "1": {
@@ -142,7 +142,48 @@
       }
     ],
     "In progress": [],
-    "In review": [],
+    "In review": [
+      {
+        "id": "T2-03",
+        "tier": 2,
+        "owner": "M1",
+        "title": "Keyword-triggered names and addresses",
+        "status": "in_review",
+        "deps": [],
+        "files": [
+          "src/core/detector.js",
+          "tests/detector.test.js"
+        ],
+        "updated": "2026-10-25 07:11",
+        "note": "Added conservative numbered-street address fallback while retaining Gemma for richer classification."
+      },
+      {
+        "id": "T2-04",
+        "tier": 2,
+        "owner": "M2",
+        "title": "Paste interception with warning",
+        "status": "in_review",
+        "deps": [],
+        "files": [
+          "src/content/interceptor.js"
+        ],
+        "updated": "2026-10-25 07:14",
+        "note": "Added post-paste input fallback so ChatGPT editor insertion still triggers ADDRESS warnings."
+      },
+      {
+        "id": "T3-01",
+        "tier": 3,
+        "owner": "M1",
+        "title": "Gemma-assisted name/address detection (local Gemma, redacted-only input guard)",
+        "status": "in_review",
+        "deps": [],
+        "files": [
+          "src/ai/gemma.js"
+        ],
+        "updated": "2026-10-25 07:11",
+        "note": "Gemma address path retained and refined by deterministic fallback."
+      }
+    ],
     "Blocked": [],
     "Next up": [
       {
@@ -309,33 +350,6 @@
         "note": ""
       },
       {
-        "id": "T2-03",
-        "tier": 2,
-        "owner": "M1",
-        "title": "Keyword-triggered names and addresses",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "src/core/detector.js",
-          "tests/detector.test.js"
-        ],
-        "updated": "",
-        "note": ""
-      },
-      {
-        "id": "T2-04",
-        "tier": 2,
-        "owner": "M2",
-        "title": "Paste interception with warning",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "src/content/interceptor.js"
-        ],
-        "updated": "",
-        "note": ""
-      },
-      {
         "id": "T2-05",
         "tier": 2,
         "owner": "M4",
@@ -361,19 +375,6 @@
         ],
         "updated": "",
         "note": ""
-      },
-      {
-        "id": "T3-01",
-        "tier": 3,
-        "owner": "M1",
-        "title": "Gemma-assisted name/address detection (local Gemma, redacted-only input guard)",
-        "status": "todo",
-        "deps": [],
-        "files": [
-          "src/ai/gemma.js"
-        ],
-        "updated": "",
-        "note": "Optional after the build window; redacted text only."
       },
       {
         "id": "T3-02",
@@ -514,28 +515,28 @@
   "issues": [],
   "latestPerMember": [
     {
-      "id": "M1-001",
+      "id": "M1-013",
       "member": 1,
-      "sequence": 1,
-      "timestamp": "2026-10-25 03:35",
-      "branch": "feat/solo-build",
-      "heading": "## M1-001 | 2026-10-25 03:35 | feat/solo-build",
-      "line": 3,
+      "sequence": 13,
+      "timestamp": "2026-10-25 07:14",
+      "branch": "main",
+      "heading": "## M1-013 | 2026-10-25 07:14 | main",
+      "line": 158,
       "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
-      "full": "## M1-001 | 2026-10-25 03:35 | feat/solo-build\n**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
-      "prompt": "fix: remove Verhoeff gate from Aadhaar detection",
+      "body": "**Prompt:** fix: detect pasted addresses after editor insertion\n**What changed:**\n- Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.\n- The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.\n- Added regression coverage for address detection through post-paste input events.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.\n**Next:** Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning.",
+      "full": "## M1-013 | 2026-10-25 07:14 | main\n**Prompt:** fix: detect pasted addresses after editor insertion\n**What changed:**\n- Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.\n- The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.\n- Added regression coverage for address detection through post-paste input events.\n**Files:** `src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)\n**Status:** in review\n**Tasks:** T2-04\n**Decisions:** none\n**Notes for others:** The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.\n**Next:** Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning.",
+      "prompt": "fix: detect pasted addresses after editor insertion",
       "changes": [
-        "Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.",
-        "Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.",
-        "Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected."
+        "Added an `input` fallback for `insertFromPaste` and `insertFromPasteAsQuotation` events.",
+        "The fallback reads the composer after ChatGPT inserts clipboard content, then runs the local redactor and shows the ADDRESS warning.",
+        "Added regression coverage for address detection through post-paste input events."
       ],
-      "files": "`src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)",
-      "status": "done",
-      "tasks": "T1-03",
+      "files": "`src/content/interceptor.js` (modified), `tests/qa-behaviour.test.js` (modified)",
+      "status": "in review",
+      "tasks": "T2-04",
       "decisions": "none",
-      "notes": "Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.",
-      "next": "Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders)."
+      "notes": "The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing.",
+      "next": "Paste `Deliver this to 42 Green Park Lane, Pune.` and verify the ADDRESS warning."
     },
     {
       "id": "M2-004",
@@ -725,221 +726,69 @@
       "decisions": "none",
       "notes": "T1-16 (README, demo script, and test prompts) is now substantially complete. Demo script and test-prompts docs already exist at docs/demo-script.md and docs/test-prompts.md; those may need polish but are not placeholders.",
       "next": "Tag the repository with v0.1.0 or open a release PR; ensure CODEOWNERS GitHub usernames are filled in before merging to main."
-    },
-    {
-      "id": "M1-001",
-      "member": 1,
-      "sequence": 1,
-      "timestamp": "2026-10-25 03:35",
-      "branch": "feat/solo-build",
-      "heading": "## M1-001 | 2026-10-25 03:35 | feat/solo-build",
-      "line": 3,
-      "file": "docs/changelog/member-1.md",
-      "body": "**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
-      "full": "## M1-001 | 2026-10-25 03:35 | feat/solo-build\n**Prompt:** fix: remove Verhoeff gate from Aadhaar detection\n**What changed:**\n- Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.\n- Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.\n- Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected.\n  **Files:** `src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-03\n  **Decisions:** none\n  **Notes for others:** Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.\n  **Next:** Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders).",
-      "prompt": "fix: remove Verhoeff gate from Aadhaar detection",
-      "changes": [
-        "Removed Verhoeff checksum requirement from isValidAadhaar() in validators.js; now accepts any 12-digit number starting with 2-9 (structural check only). Verhoeff functions kept and still exported for optional use.",
-        "Updated tests/validators.test.js: 'rejects false positives' test now asserts that structural Aadhaar (234567890123) IS accepted, and still asserts starts-with-0/1 and wrong-length are rejected.",
-        "Updated tests/detector.test.js: 'false positives' test updated to remove badAadhaar case and adds a positive assertion that a structural Aadhaar IS now detected."
-      ],
-      "files": "`src/core/validators.js` (modified), `tests/validators.test.js` (modified), `tests/detector.test.js` (modified)",
-      "status": "done",
-      "tasks": "T1-03",
-      "decisions": "none",
-      "notes": "Verhoeff is intentionally dropped from detection — over-redacting is safer than missing a real Aadhaar. If stricter precision is needed later, add it as an opt-in setting, not a default gate.",
-      "next": "Implement T1-01 (phone detector) and T1-02 (email detector) if not already complete; then T1-05 (redact() with consistent placeholders)."
-    },
-    {
-      "id": "M2-003",
-      "member": 2,
-      "sequence": 3,
-      "timestamp": "2026-10-25 03:26",
-      "branch": "feat/solo-build",
-      "heading": "## M2-003 | 2026-10-25 03:26 | feat/solo-build",
-      "line": 35,
-      "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
-      "full": "## M2-003 | 2026-10-25 03:26 | feat/solo-build\n**Prompt:** fix: add SS_SEND_REDACTED handler in main.js\n**What changed:**\n- Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.\n- Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'.\n  **Files:** `src/content/main.js` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.\n  **Next:** Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears.",
-      "prompt": "fix: add SS_SEND_REDACTED handler in main.js",
-      "changes": [
-        "Added SS_SEND_REDACTED case to the chrome.runtime.onMessage listener in main.js; guards against disabled/no-composer states, reads composer text, runs redact(), writes redacted text back into composer, shows preview-modal, and replies synchronously with {ok:true} so the popup feedback works immediately.",
-        "Cancel action restores original text; Send action calls composer.submit(adapter); no_pii case replies with reason:'no_pii'."
-      ],
-      "files": "`src/content/main.js` (modified)",
-      "status": "done",
-      "tasks": "none",
-      "decisions": "none",
-      "notes": "The SS_SEND_REDACTED handler does NOT run the full fail-closed interceptor path (no final PII re-check before submit). M2 should add a final detect() safety guard before composer.submit if time allows.",
-      "next": "Test the full flow in live Chrome — open ChatGPT, type PII, click extension icon, click Send Redacted, confirm preview modal appears."
-    },
-    {
-      "id": "M3-002",
-      "member": 3,
-      "sequence": 2,
-      "timestamp": "2026-10-25 03:16",
-      "branch": "feat/solo-build",
-      "heading": "## M3-002 | 2026-10-25 03:16 | feat/solo-build",
-      "line": 18,
-      "file": "docs/changelog/member-3.md",
-      "body": "**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
-      "full": "## M3-002 | 2026-10-25 03:16 | feat/solo-build\n**Prompt:** feat: add Send Redacted button to popup\n**What changed:**\n- Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.\n- Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.\n- Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).\n- Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error).\n  **Files:** `src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)\n  **Status:** done\n  **Tasks:** T1-11\n  **Decisions:** none\n  **Notes for others:** Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.\n  **Next:** M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish).",
-      "prompt": "feat: add Send Redacted button to popup",
-      "changes": [
-        "Added a \"Send Redacted\" full-width button with shield icon to popup.html, placed above the Privacy Dashboard footer link in its own .send-redacted-section.",
-        "Added a .send-redacted-feedback div (aria-live=\"polite\") below the button that shows inline success/error messages without blocking the UI.",
-        "Added CSS in popup.css for .send-redacted-btn (gradient green, hover lift, disabled state) and .send-redacted-feedback (success/error colour variants).",
-        "Wired the button in popup.js: disabled by default; enabled only when setStatusUI('active') is called; click sends SS_SEND_REDACTED to the active tab's content script and shows feedback based on the response (ok, no_pii, disabled, or error)."
-      ],
-      "files": "`src/ui/popup/popup.html` (modified), `src/ui/popup/popup.css` (modified), `src/ui/popup/popup.js` (modified)",
-      "status": "done",
-      "tasks": "T1-11",
-      "decisions": "none",
-      "notes": "Content script (main.js / interceptor.js, owned by M2) must handle the SS_SEND_REDACTED message type and reply with {ok:true}, {ok:false, reason:'no_pii'}, {ok:false, reason:'disabled'}, or {ok:false, message:'...'} for the popup feedback to work end-to-end.",
-      "next": "M2 wires SS_SEND_REDACTED handler in main.js; M3 can then do T1-12 (icons and branding polish)."
-    },
-    {
-      "id": "M3-001",
-      "member": 3,
-      "sequence": 1,
-      "timestamp": "2026-10-25 03:04",
-      "branch": "feat/solo-build",
-      "heading": "## M3-001 | 2026-10-25 03:04 | feat/solo-build",
-      "line": 3,
-      "file": "docs/changelog/member-3.md",
-      "body": "**Prompt:** fix: popup decides support only from SS_GET_STATUS reply\n**What changed:**\n\n- Removed tab.url and tab.title checks from checkTabStatus in popup.js; popup decides page support purely on the response to the SS_GET_STATUS message without requiring the tabs permission.\n- Handled chrome.runtime.lastError (\"Receiving end does not exist\" or unattached content script) and null response cleanly by setting status to unsupported (\"Not supported on this page\").\n- Added unit tests in tests/popup.test.js verifying that popup status logic works with tabs lacking url/title, handles connection errors gracefully, and does not require the tabs permission.\n  **Files:** `src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-10\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT.",
-      "full": "## M3-001 | 2026-10-25 03:04 | feat/solo-build\n**Prompt:** fix: popup decides support only from SS_GET_STATUS reply\n**What changed:**\n\n- Removed tab.url and tab.title checks from checkTabStatus in popup.js; popup decides page support purely on the response to the SS_GET_STATUS message without requiring the tabs permission.\n- Handled chrome.runtime.lastError (\"Receiving end does not exist\" or unattached content script) and null response cleanly by setting status to unsupported (\"Not supported on this page\").\n- Added unit tests in tests/popup.test.js verifying that popup status logic works with tabs lacking url/title, handles connection errors gracefully, and does not require the tabs permission.\n  **Files:** `src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-10\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT.",
-      "prompt": "fix: popup decides support only from SS_GET_STATUS reply",
-      "changes": [],
-      "files": "`src/ui/popup/popup.js` (modified), `tests/popup.test.js` (added)",
-      "status": "done",
-      "tasks": "T1-10",
-      "decisions": "none",
-      "notes": "none",
-      "next": "Verify popup in Chrome with live extension reload and test prompt submissions on ChatGPT."
-    },
-    {
-      "id": "M2-002",
-      "member": 2,
-      "sequence": 2,
-      "timestamp": "2026-10-25 02:33",
-      "branch": "feat/solo-build",
-      "heading": "## M2-002 | 2026-10-25 02:33 | feat/solo-build",
-      "line": 18,
-      "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n  **Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-07, T1-08\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Test in live browser extension environment against latest ChatGPT DOM.",
-      "full": "## M2-002 | 2026-10-25 02:33 | feat/solo-build\n**Prompt:** fix: detect ChatGPT composer robustly and look up Send button lazily\n**What changed:**\n\n- Made composer detection robust in chatgpt.js by sequentially checking visible and editable elements across #prompt-textarea, div.ProseMirror[contenteditable=\"true\"], [contenteditable=\"true\"][role=\"textbox\"], form [contenteditable=\"true\"], and form textarea.\n- Made findSendButton in chatgpt.js look up Send button lazily only at submission/click time, strictly ignoring voice, dictation, and think buttons.\n- Updated main.js to compute honest active status based strictly on protection enabled, composer found, and hooks attached (never requiring Send button at load time), with diagnostic console.debug logging on reason changes and diagnostic reason field in SS_GET_STATUS reply.\n- Enhanced main.js SPA navigation observation with popstate/pushState/replaceState listeners and fail-closed submission guarding.\n- Added comprehensive unit tests in tests/content.test.js covering ProseMirror composer, textarea fallback, unsupported without composer, active without send button, lazy send button detection, and voice button exclusion.\n  **Files:** `src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)\n  **Status:** done\n  **Tasks:** T1-07, T1-08\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Test in live browser extension environment against latest ChatGPT DOM.",
-      "prompt": "fix: detect ChatGPT composer robustly and look up Send button lazily",
-      "changes": [],
-      "files": "`src/content/adapters/chatgpt.js` (modified), `src/content/main.js` (modified), `tests/content.test.js` (modified)",
-      "status": "done",
-      "tasks": "T1-07, T1-08",
-      "decisions": "none",
-      "notes": "none",
-      "next": "Test in live browser extension environment against latest ChatGPT DOM."
-    },
-    {
-      "id": "M2-001",
-      "member": 2,
-      "sequence": 1,
-      "timestamp": "2026-10-25 01:44",
-      "branch": "feat/solo-build",
-      "heading": "## M2-001 | 2026-10-25 01:44 | feat/solo-build",
-      "line": 3,
-      "file": "docs/changelog/member-2.md",
-      "body": "**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n  **Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-09\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Run full verification and review regression suite.",
-      "full": "## M2-001 | 2026-10-25 01:44 | feat/solo-build\n**Prompt:** fix: fail closed when redaction cannot be applied to the composer\n**What changed:**\n\n- Enforced fail-closed behavior in interceptor.js: if composer.setText returns false or composer.getText does not match redactedText, immediately block send and call modal.warn without calling submit or showing preview.\n- Added a final safety check immediately before any call to composer.submit: re-read composer text and run detect(); if any PII is detected or detect throws, block submission and call modal.warn.\n- Added regression tests in tests/failclosed.test.js covering setText false, getText mismatch, user adding PII while modal is open, and happy path submission. Verified qa-behaviour Test 10 passes.\n  **Files:** `src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)\n  **Status:** done\n  **Tasks:** T1-09\n  **Decisions:** none\n  **Notes for others:** none\n  **Next:** Run full verification and review regression suite.",
-      "prompt": "fix: fail closed when redaction cannot be applied to the composer",
-      "changes": [],
-      "files": "`src/content/interceptor.js` (modified), `tests/failclosed.test.js` (added)",
-      "status": "done",
-      "tasks": "T1-09",
-      "decisions": "none",
-      "notes": "none",
-      "next": "Run full verification and review regression suite."
-    },
-    {
-      "id": "M4-004",
-      "member": 4,
-      "sequence": 4,
-      "timestamp": "2026-10-24 21:10",
-      "branch": "chore/project-state-handoff",
-      "heading": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff",
-      "line": 45,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "full": "## M4-004 | 2026-10-24 21:10 | chore/project-state-handoff\n**Prompt:** Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.\n**What changed:**\n\n- Fixed state generation: no ANSI in the repo map, porcelain working-tree paths keep the leading status space, log fields parse with leading whitespace, changelog entries show member role.\n- Made `npm run task` treat a missing note as empty so PowerShell can restore statuses.\n- Verified `npm run prepare`, changelog, state, format, state:check, the pre-commit hook, and the task CLI.\n  **Files:** `scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.\n  **Next:** Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up.",
-      "prompt": "Finish live project memory: verify generators, hook, task CLI, commit, and push the branch.",
-      "changes": [],
-      "files": "`scripts/lib.js` (modified), `scripts/state.js` (modified), `scripts/build-changelog.js` (modified), `scripts/task.js` (modified), `docs/changelog/member-4.md` (modified)",
-      "status": "done",
-      "tasks": "none",
-      "decisions": "none",
-      "notes": "Open a PR from `chore/project-state-handoff` into `main`. Do not merge from this session. Replace CODEOWNERS placeholders with real GitHub usernames.",
-      "next": "Teammates should pull the branch, run `npm install` so `prepare` sets `core.hooksPath` to `.githooks`, and start Tier 1 work from Next up."
-    },
-    {
-      "id": "M4-003",
-      "member": 4,
-      "sequence": 3,
-      "timestamp": "2026-10-24 20:36",
-      "branch": "chore/project-state-handoff",
-      "heading": "## M4-003 | 2026-10-24 20:36 | chore/project-state-handoff",
-      "line": 31,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Add generated project memory, task/decision tracking, agent protocols, and CI checks.\n**What changed:**\n\n- Added editable project state sources, per-member logs, generation scripts, and generated handoff files.\n- Added agent instructions, a Git hook, CI checks, and command-line tracking tools.\n  **Files:** `docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-004\n  **Notes for others:** Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.\n  **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.",
-      "full": "## M4-003 | 2026-10-24 20:36 | chore/project-state-handoff\n**Prompt:** Add generated project memory, task/decision tracking, agent protocols, and CI checks.\n**What changed:**\n\n- Added editable project state sources, per-member logs, generation scripts, and generated handoff files.\n- Added agent instructions, a Git hook, CI checks, and command-line tracking tools.\n  **Files:** `docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-004\n  **Notes for others:** Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.\n  **Next:** Run the verification commands, inspect the generated state, and open a PR into `main`.",
-      "prompt": "Add generated project memory, task/decision tracking, agent protocols, and CI checks.",
-      "changes": [],
-      "files": "`docs/state/project.md` (added), `docs/state/tasks.json` (added), `docs/state/decisions.md` (added), `docs/state/issues.md` (added), `docs/state/resume-prompt.md` (added), `docs/changelog/README.md` (added), `docs/changelog/member-1.md` (added), `docs/changelog/member-2.md` (added), `docs/changelog/member-3.md` (added), `docs/changelog/member-4.md` (modified), `scripts/lib.js` (added), `scripts/build-changelog.js` (added), `scripts/state.js` (added), `scripts/new-log-entry.js` (added), `scripts/task.js` (added), `scripts/decision.js` (added), `scripts/setup-hooks.js` (added), `.githooks/pre-commit` (added), `AGENTS.md` (added), `CLAUDE.md` (added), `GEMINI.md` (added), `.github/copilot-instructions.md` (added), `.cursor/rules/safeshield.mdc` (added), `.github/workflows/state-check.yml` (added), `.gitattributes` (added), `package.json` (modified), `README.md` (modified), `CONTRIBUTING.md` (modified), `.github/CODEOWNERS` (modified), `.github/pull_request_template.md` (modified)",
-      "status": "done",
-      "tasks": "none",
-      "decisions": "D-004",
-      "notes": "Generated project state is not hand-edited. Continue to log work by appending entries and regenerating state.",
-      "next": "Run the verification commands, inspect the generated state, and open a PR into `main`."
-    },
-    {
-      "id": "M4-002",
-      "member": 4,
-      "sequence": 2,
-      "timestamp": "2026-10-24 20:36",
-      "branch": "chore/scaffold-setup",
-      "heading": "## M4-002 | 2026-10-24 20:36 | chore/scaffold-setup",
-      "line": 17,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Install minimal development tooling and configure formatting and linting.\n**What changed:**\n\n- Added the requested development-only formatter, linter, globals, and Chrome type packages.\n- Added npm test, lint, format, and format-check scripts and a flat ESLint config.\n  **Files:** `package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-002\n  **Notes for others:** `node_modules/` is ignored; the app has no runtime dependencies and no bundler.\n  **Next:** Add implementation and tests without weakening the local-only privacy requirements.",
-      "full": "## M4-002 | 2026-10-24 20:36 | chore/scaffold-setup\n**Prompt:** Install minimal development tooling and configure formatting and linting.\n**What changed:**\n\n- Added the requested development-only formatter, linter, globals, and Chrome type packages.\n- Added npm test, lint, format, and format-check scripts and a flat ESLint config.\n  **Files:** `package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** D-002\n  **Notes for others:** `node_modules/` is ignored; the app has no runtime dependencies and no bundler.\n  **Next:** Add implementation and tests without weakening the local-only privacy requirements.",
-      "prompt": "Install minimal development tooling and configure formatting and linting.",
-      "changes": [],
-      "files": "`package.json` (added), `package-lock.json` (added), `eslint.config.js` (added), `.prettierrc` (modified), `.gitignore` (modified)",
-      "status": "done",
-      "tasks": "none",
-      "decisions": "D-002",
-      "notes": "`node_modules/` is ignored; the app has no runtime dependencies and no bundler.",
-      "next": "Add implementation and tests without weakening the local-only privacy requirements."
-    },
-    {
-      "id": "M4-001",
-      "member": 4,
-      "sequence": 1,
-      "timestamp": "2026-10-24 20:36",
-      "branch": "chore/scaffold-setup",
-      "heading": "## M4-001 | 2026-10-24 20:36 | chore/scaffold-setup",
-      "line": 3,
-      "file": "docs/changelog/member-4.md",
-      "body": "**Prompt:** Create the initial SafeShield repository scaffold.\n**What changed:**\n\n- Added the MV3 manifest, documentation placeholders, source tree, UI shells, and test placeholders.\n- Added placeholder extension icons at 16, 48, and 128 pixels.\n  **Files:** `manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The scaffold files were placeholders; existence alone does not mean the feature task is implemented.\n  **Next:** Build out the Tier 1 tasks owned by each member.",
-      "full": "## M4-001 | 2026-10-24 20:36 | chore/scaffold-setup\n**Prompt:** Create the initial SafeShield repository scaffold.\n**What changed:**\n\n- Added the MV3 manifest, documentation placeholders, source tree, UI shells, and test placeholders.\n- Added placeholder extension icons at 16, 48, and 128 pixels.\n  **Files:** `manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)\n  **Status:** done\n  **Tasks:** none\n  **Decisions:** none\n  **Notes for others:** The scaffold files were placeholders; existence alone does not mean the feature task is implemented.\n  **Next:** Build out the Tier 1 tasks owned by each member.",
-      "prompt": "Create the initial SafeShield repository scaffold.",
-      "changes": [],
-      "files": "`manifest.json` (added), `README.md` (added), `CONTRIBUTING.md` (added), `.gitignore` (added), `.env.example` (added), `.prettierrc` (added), `.github/CODEOWNERS` (added), `.github/pull_request_template.md` (added), `docs/contracts.md` (added), `docs/demo-script.md` (added), `docs/test-prompts.md` (added), `assets/icons/.gitkeep` (added), `assets/icons/icon16.png` (added), `assets/icons/icon48.png` (added), `assets/icons/icon128.png` (added), `src/shared/constants.js` (added), `src/shared/storage.js` (added), `src/shared/vault.js` (added), `src/core/validators.js` (added), `src/core/patterns.js` (added), `src/core/detector.js` (added), `src/core/redactor.js` (added), `src/content/adapters/chatgpt.js` (added), `src/content/interceptor.js` (added), `src/content/composer.js` (added), `src/content/main.js` (added), `src/background/service-worker.js` (added), `src/ui/popup/popup.html` (added), `src/ui/popup/popup.css` (added), `src/ui/popup/popup.js` (added), `src/ui/overlay/preview-modal.js` (added), `src/ui/overlay/preview-modal.css` (added), `src/ui/shared.css` (added), `src/dashboard/dashboard.html` (added), `src/dashboard/dashboard.css` (added), `src/dashboard/dashboard.js` (added), `src/ai/gemma.js` (added), `tests/validators.test.js` (added), `tests/detector.test.js` (added), `tests/redactor.test.js` (added)",
-      "status": "done",
-      "tasks": "none",
-      "decisions": "none",
-      "notes": "The scaffold files were placeholders; existence alone does not mean the feature task is implemented.",
-      "next": "Build out the Tier 1 tasks owned by each member."
     }
   ],
   "openHandoffs": [
+    {
+      "id": "M1-013",
+      "member": 1,
+      "notes": "The address detector and redactor are verified independently. Reload the extension and open a new ChatGPT tab before testing."
+    },
+    {
+      "id": "M1-012",
+      "member": 1,
+      "notes": "The verified fallback detects `42 Green Park Lane, Pune` as one `ADDRESS` span. Reload the extension and ChatGPT before live testing."
+    },
+    {
+      "id": "M1-011",
+      "member": 1,
+      "notes": "Regex warnings remain synchronous and Gemma is only attempted when regex finds no entities. Reload both the extension and ChatGPT before testing."
+    },
+    {
+      "id": "M1-010",
+      "member": 1,
+      "notes": "Regex-detected phone/PAN/email/Aadhaar data now warns without waiting for Gemma. Address/name warnings still require Gemma when regex cannot identify them."
+    },
+    {
+      "id": "M1-009",
+      "member": 1,
+      "notes": "The supplied attachment was a source snapshot, not a stack trace. A fresh ChatGPT tab is still needed after reloading the extension."
+    },
+    {
+      "id": "M1-008",
+      "member": 1,
+      "notes": "Reloading the unpacked extension still requires refreshing existing ChatGPT tabs; stale content scripts cannot be revived."
+    },
+    {
+      "id": "M1-007",
+      "member": 1,
+      "notes": "This addresses the screenshot at `storage.js` line 192. A fresh ChatGPT tab is still required after reloading the extension because old content scripts cannot be revived."
+    },
+    {
+      "id": "M1-006",
+      "member": 1,
+      "notes": "The screenshot error is caused by an old ChatGPT content script surviving an extension reload. The fix prevents storage listener errors; users should still refresh ChatGPT after reloading the extension."
+    },
+    {
+      "id": "M1-005",
+      "member": 1,
+      "notes": "Paste warning is asynchronous for AI-only entities and appears after the local model responds. It does not block paste; the send-time preview remains the final redaction gate."
+    },
+    {
+      "id": "M1-004",
+      "member": 1,
+      "notes": "Reload both the extension and ChatGPT tab after changing the service worker. Structured phone/PAN detection remains independent of Gemma."
+    },
+    {
+      "id": "M1-003",
+      "member": 1,
+      "notes": "Local smoke classification returned an ADDRESS span from `gemma4:e2b`. Reload the unpacked extension after this change; phone/PAN should use the regex preview immediately even when AI Assist is enabled. Address-only prompts still require Ollama at `127.0.0.1:11434`."
+    },
+    {
+      "id": "M1-002",
+      "member": 1,
+      "notes": "Address classification still requires a running local Ollama instance with the configured model. This machine has no `ollama` executable, so live address detection could not be exercised here. The existing design intentionally falls back to regex-only detection when Gemma is unavailable."
+    },
     {
       "id": "M2-004",
       "member": 2,
@@ -1203,7 +1052,7 @@
     },
     {
       "path": "src/ai/gemma.js",
-      "classification": "implemented (227 lines)"
+      "classification": "implemented (243 lines)"
     },
     {
       "path": "src/background/service-worker.js",
@@ -1227,11 +1076,11 @@
     },
     {
       "path": "src/core/detector.js",
-      "classification": "implemented (278 lines)"
+      "classification": "implemented (291 lines)"
     },
     {
       "path": "src/core/patterns.js",
-      "classification": "implemented (37 lines)"
+      "classification": "implemented (40 lines)"
     },
     {
       "path": "src/core/redactor.js",
@@ -1259,7 +1108,7 @@
     },
     {
       "path": "src/shared/storage.js",
-      "classification": "implemented (244 lines)"
+      "classification": "implemented (363 lines)"
     },
     {
       "path": "src/shared/vault.js",
@@ -1287,7 +1136,7 @@
     },
     {
       "path": "src/ui/popup/popup.js",
-      "classification": "implemented (190 lines)"
+      "classification": "implemented (203 lines)"
     },
     {
       "path": "src/ui/shared.css",
@@ -1311,7 +1160,7 @@
     },
     {
       "path": "tests/gemma.test.js",
-      "classification": "implemented (98 lines)"
+      "classification": "implemented (122 lines)"
     },
     {
       "path": "tests/modal.test.js",
@@ -1323,7 +1172,7 @@
     },
     {
       "path": "tests/qa-behaviour.test.js",
-      "classification": "implemented (882 lines)"
+      "classification": "implemented (1078 lines)"
     },
     {
       "path": "tests/qa-e2e.test.js",
@@ -1352,6 +1201,18 @@
     {
       "path": "tests/vault.test.js",
       "classification": "implemented (27 lines)"
+    },
+    {
+      "path": "tools/eval/README.md",
+      "classification": null
+    },
+    {
+      "path": "tools/eval/dataset.json",
+      "classification": null
+    },
+    {
+      "path": "tools/eval/run-eval.js",
+      "classification": null
     }
   ],
   "verification": "not run"

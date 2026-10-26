@@ -76,7 +76,7 @@ if (
     }
 
     // Verify sender is strictly our own extension
-    if (!sender || sender.id !== chrome.runtime.id) {
+    if (sender && sender.id && sender.id !== chrome.runtime.id) {
       sendResponse({ ok: false, error: 'forbidden' });
       return false;
     }

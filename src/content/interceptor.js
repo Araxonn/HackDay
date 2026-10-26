@@ -8,6 +8,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
   let isEnabled = true;
   let attachedComposer = null;
   let unsubscribeStorage = null;
+  const checkedPasteEvents =
+    typeof WeakSet !== 'undefined' ? new WeakSet() : null;
 
   function initStorage() {
     const storage = SafeShield.storage;
@@ -23,6 +25,102 @@ globalThis.SafeShield = globalThis.SafeShield || {};
         });
       }
     }
+  }
+
+  async function checkPaste(e) {
+    if (!isEnabled || isBypassing) return;
+    if (
+      e &&
+      checkedPasteEvents &&
+      typeof e === 'object' &&
+      checkedPasteEvents.has(e)
+    ) {
+      return;
+    }
+    if (e && checkedPasteEvents && typeof e === 'object') {
+      checkedPasteEvents.add(e);
+    }
+
+    try {
+      const clipboardText = getPastedText(e);
+      if (!clipboardText || !SafeShield.redactor) return;
+
+      const result = SafeShield.redactor.redact(clipboardText);
+      const matches = result.entities || [];
+      if (matches.length > 0) {
+        // Regex detection is deterministic and must warn even when AI is enabled.
+        warnSensitiveTypes(matches);
+        if (matches.some((entity) => entity.type !== 'ADDRESS')) return;
+      }
+
+      const storage = SafeShield.storage;
+      const aiEnabled =
+        storage && typeof storage.getAiAssist === 'function'
+          ? await storage.getAiAssist()
+          : false;
+      const words = clipboardText.trim().split(/\s+/).filter(Boolean);
+      if (!aiEnabled || words.length < 3) return;
+
+      const aiRes = await classifyWithGemma(result.redactedText);
+      const spans =
+        aiRes && aiRes.ok && Array.isArray(aiRes.spans) ? aiRes.spans : [];
+      if (spans.length > 0) {
+        warnSensitiveTypes(spans);
+      }
+    } catch (pasteErr) {
+      console.error('SafeShield paste check error:', pasteErr);
+    }
+  }
+
+  function checkComposerAfterPaste(composerEl, e) {
+    if (
+      !e ||
+      (e.inputType !== 'insertFromPaste' &&
+        e.inputType !== 'insertFromPasteAsQuotation')
+    ) {
+      return;
+    }
+    if (!isEnabled || isBypassing || !SafeShield.redactor) return;
+
+    try {
+      const currentText = SafeShield.composer
+        ? SafeShield.composer.getText(composerEl)
+        : '';
+      const result = SafeShield.redactor.redact(currentText);
+      if (result.entities && result.entities.length > 0) {
+        warnSensitiveTypes(result.entities);
+      }
+    } catch (inputErr) {
+      console.error('SafeShield pasted-input check error:', inputErr);
+    }
+  }
+
+  function classifyWithGemma(text) {
+    return new Promise((resolve) => {
+      if (
+        typeof chrome === 'undefined' ||
+        !chrome.runtime ||
+        typeof chrome.runtime.sendMessage !== 'function'
+      ) {
+        resolve({ ok: false, error: 'unavailable' });
+        return;
+      }
+
+      chrome.runtime.sendMessage(
+        { type: 'SS_AI_CLASSIFY', text },
+        (resp) => {
+          try {
+            if (chrome.runtime.lastError || !resp) {
+              resolve({ ok: false, error: 'unavailable' });
+            } else {
+              resolve(resp);
+            }
+          } catch {
+            resolve({ ok: false, error: 'unavailable' });
+          }
+        },
+      );
+    });
   }
 
   async function handleSubmission(e, composerEl, adapter) {
@@ -85,30 +183,20 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           : false;
 
       const words = redactedText.trim().split(/\s+/).filter(Boolean);
-      // Skip if under 3 words or if structured PII is still detected
-      const hasRemainingStructuredPII = SafeShield.detector
-        ? SafeShield.detector.detect(redactedText).length > 0
-        : false;
+      // Structured PII already has a deterministic redaction path. Keep AI
+      // off that path so enabling it cannot delay or alter reliable matches.
+      const hasStructuredPII = entities.some(
+        (entity) => entity.type !== 'ADDRESS',
+      );
 
       if (
         isAiEnabled &&
         words.length >= 3 &&
-        !hasRemainingStructuredPII &&
+        !hasStructuredPII &&
         typeof chrome !== 'undefined' &&
         chrome.runtime
       ) {
-        const aiRes = await new Promise((resolve) => {
-          chrome.runtime.sendMessage(
-            { type: 'SS_AI_CLASSIFY', text: redactedText },
-            (resp) => {
-              if (chrome.runtime.lastError || !resp) {
-                resolve({ ok: false, error: 'unavailable' });
-              } else {
-                resolve(resp);
-              }
-            },
-          );
-        });
+        const aiRes = await classifyWithGemma(redactedText);
 
         if (
           aiRes &&
@@ -116,6 +204,17 @@ globalThis.SafeShield = globalThis.SafeShield || {};
           Array.isArray(aiRes.spans) &&
           aiRes.spans.length > 0
         ) {
+          const aiAddresses = aiRes.spans.filter(
+            (span) => span.type === 'ADDRESS',
+          );
+          if (aiAddresses.length > 0) {
+            for (let i = entities.length - 1; i >= 0; i--) {
+              if (entities[i].type === 'ADDRESS') entities.splice(i, 1);
+            }
+            counts.ADDRESS = 0;
+            redactedText = redactResult.redactedText;
+          }
+
           let nameIndex = 0;
           let addrIndex = 0;
           for (const span of aiRes.spans) {
@@ -289,7 +388,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       true, // Capture phase
     );
 
-    // Capture-phase paste listener with proactive warning banner
+    // Capture-phase paste listener with proactive warning banner.
+    composerEl.addEventListener('paste', (e) => checkPaste(e), true);
     composerEl.addEventListener(
       'paste',
       async (e) => {
@@ -338,6 +438,30 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       },
       true, // Capture phase
     );
+  }
+
+  function getPastedText(event) {
+    const clipboardData = event && event.clipboardData;
+    if (!clipboardData || typeof clipboardData.getData !== 'function') {
+      return '';
+    }
+    return (
+      clipboardData.getData('text/plain') ||
+      clipboardData.getData('text') ||
+      ''
+    );
+  }
+
+  function warnSensitiveTypes(entities) {
+    if (!SafeShield.modal || typeof SafeShield.modal.warn !== 'function') {
+      return;
+    }
+    const types = [...new Set(entities.map((entity) => entity.type))];
+    if (types.length > 0) {
+      SafeShield.modal.warn(
+        `Sensitive data (${types.join(', ')}) detected in paste. SafeShield will redact before sending.`,
+      );
+    }
   }
 
   const interceptor = {

@@ -105,7 +105,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     aiToggle.checked = Boolean(isAiEnabled);
 
     aiToggle.addEventListener('change', async () => {
-      await storage.setAiAssist(aiToggle.checked);
+      const requestedValue = aiToggle.checked;
+      try {
+        await storage.setAiAssist(requestedValue);
+      } catch (error) {
+        aiToggle.checked = !requestedValue;
+        console.error('SafeShield AI Assist toggle error:', error);
+        setStatusUI('error', 'Could not save AI Assist setting');
+      }
     });
   }
 
@@ -116,8 +123,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Handle toggle switch change
   toggle.addEventListener('change', async () => {
     const nextVal = toggle.checked;
-    await storage.setEnabled(nextVal);
-    checkTabStatus(nextVal);
+    try {
+      await storage.setEnabled(nextVal);
+      checkTabStatus(nextVal);
+    } catch (error) {
+      toggle.checked = !nextVal;
+      console.error('SafeShield protection toggle error:', error);
+      setStatusUI('error', 'Could not save protection setting');
+    }
   });
 
   // Subscribe to live storage changes

@@ -121,6 +121,24 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     return valid;
   }
 
+  function parseStructuredContent(content) {
+    if (content && typeof content === 'object') {
+      return content;
+    }
+    if (typeof content !== 'string') {
+      return null;
+    }
+
+    const trimmed = content.trim();
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const candidate = fenced ? fenced[1].trim() : trimmed;
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Classifies text using local Ollama.
    * Pure function accepting custom injected fetch for testability and zero-dependency isolation.
@@ -140,7 +158,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       return { ok: false, error: 'forbidden' };
     }
 
-    const input = (text || '').slice(0, opts.maxChars);
+    const input = typeof text === 'string' ? text.slice(0, opts.maxChars) : '';
+    if (!input.trim()) {
+      return { ok: true, spans: [] };
+    }
 
     const controller =
       typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -172,14 +193,8 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       }
 
       const json = await res.json();
-      let parsedContent;
-      try {
-        const rawContent = json && json.message && json.message.content;
-        parsedContent =
-          typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
-      } catch {
-        return { ok: false, error: 'bad-response' };
-      }
+      const rawContent = json && json.message && json.message.content;
+      const parsedContent = parseStructuredContent(rawContent);
 
       if (!parsedContent || !Array.isArray(parsedContent.spans)) {
         return { ok: false, error: 'bad-response' };
@@ -235,6 +250,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
     assertLoopback,
     buildChatBody,
     extractSpans,
+    parseStructuredContent,
     classify,
     ping,
   };

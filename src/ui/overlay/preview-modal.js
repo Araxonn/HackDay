@@ -24,6 +24,10 @@ globalThis.SafeShield = globalThis.SafeShield || {};
       hostEl = document.createElement('div');
       hostEl.id = 'safeshield-preview-modal-host';
       hostEl.setAttribute('data-safeshield', 'true');
+      hostEl.style.position = 'fixed';
+      hostEl.style.inset = '0';
+      hostEl.style.zIndex = '2147483647';
+      hostEl.style.pointerEvents = 'none';
       document.body.appendChild(hostEl);
       shadowRoot = hostEl.attachShadow({ mode: 'open' });
 
@@ -217,6 +221,7 @@ globalThis.SafeShield = globalThis.SafeShield || {};
 
     const banner = document.createElement('div');
     banner.className = 'ss-warn-banner';
+    banner.style.pointerEvents = 'auto';
     banner.setAttribute('role', 'alert');
 
     const textSpan = document.createElement('span');
